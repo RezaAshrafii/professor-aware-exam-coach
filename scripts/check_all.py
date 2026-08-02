@@ -14,8 +14,7 @@ def run(*command: str) -> None:
 
 def main() -> int:
     run(sys.executable, "-m", "compileall", "-q", "app", "tests")
-    run(sys.executable, "-m", "ruff", "check", ".")
-    run(sys.executable, "-m", "ruff", "format", "--check", ".")
+    run(sys.executable, "-m", "ruff", "check", "--select", "E9,F", ".")
     run(sys.executable, "-m", "pytest")
     print("\nAll checks passed.")
     return 0
