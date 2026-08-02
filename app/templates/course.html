@@ -23,6 +23,7 @@
 <nav class="tabs" data-tabs>
   <button class="active" data-tab="coach">مربی</button>
   <button data-tab="sources">منابع</button>
+  <button data-tab="examples">مثال‌های استاد</button>
   <button data-tab="history">تاریخچه</button>
   <button data-tab="mistakes">دفترچه خطا</button>
   <button data-tab="settings">اطلاعات درس</button>
@@ -56,7 +57,7 @@
       <form id="coach-form" data-course-id="{{ course.id }}">
         <textarea id="coach-prompt" rows="5" placeholder="مثلاً: بر اساس منابع فعلی پروفایل اولیه استاد را بساز و موارد نامطمئن را جدا کن." required></textarea>
         <div class="composer-footer">
-          <span>{{ sources|length }} منبع در دسترس</span>
+          <span>{{ sources|length }} منبع · {{ example_cards|selectattr('status', 'equalto', 'confirmed')|list|length }} مثال تأییدشده</span>
           <button class="button primary" id="run-button">اجرا</button>
         </div>
       </form>
@@ -88,6 +89,97 @@
         <button class="button primary full">بارگذاری و پردازش</button>
       </form>
       <div class="notice">PDF اسکن‌شده در این نسخه OCR نمی‌شود. برای آن باید متن قابل انتخاب یا نسخه متنی داشته باشی.</div>
+    </div>
+  </div>
+</section>
+
+<section class="tab-panel" data-panel="examples" id="examples">
+  <div class="two-column example-layout">
+    <div class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>کارت‌های مثال استاد</h2>
+          <p>فقط کارت‌های تأییدشده وارد retrieval و پاسخ مدل می‌شوند.</p>
+        </div>
+        <span class="pill">{{ example_cards|length }} کارت</span>
+      </div>
+      {% if example_cards %}
+      <div class="example-card-list">
+        {% for card in example_cards %}
+        <article class="example-card status-{{ card.status }}">
+          <div class="example-card-head">
+            <div>
+              <span class="pill {% if card.status == 'confirmed' %}success{% else %}warning{% endif %}">
+                {% if card.status == 'confirmed' %}تأییدشده{% else %}پیش‌نویس{% endif %}
+              </span>
+              {% if card.topic %}<span class="pill">{{ card.topic }}</span>{% endif %}
+            </div>
+            <div class="example-card-actions">
+              <form method="post" action="/example-cards/{{ card.id }}/status">
+                <input type="hidden" name="course_id" value="{{ course.id }}">
+                <input type="hidden" name="status" value="{% if card.status == 'confirmed' %}draft{% else %}confirmed{% endif %}">
+                <button class="button ghost small">{% if card.status == 'confirmed' %}برگردان به پیش‌نویس{% else %}تأیید کارت{% endif %}</button>
+              </form>
+              <form method="post" action="/example-cards/{{ card.id }}/delete" data-confirm="این کارت مثال حذف شود؟">
+                <input type="hidden" name="course_id" value="{{ course.id }}">
+                <button class="icon-button">×</button>
+              </form>
+            </div>
+          </div>
+          <h3>{{ card.title }}</h3>
+          <div class="example-meta">
+            {% if card.method_name %}<span>روش: <strong>{{ card.method_name }}</strong></span>{% endif %}
+            <span>نوع منبع: {{ card.source_kind }}</span>
+            {% if card.source_reference %}<span>مرجع: {{ card.source_reference }}</span>{% endif %}
+          </div>
+          <details>
+            <summary>مشاهده سؤال و راه‌حل</summary>
+            <div class="example-content">
+              <h4>صورت سؤال</h4>
+              <p>{{ card.question }}</p>
+              <h4>راه‌حل ثبت‌شده استاد</h4>
+              <p>{{ card.solution }}</p>
+              {% if card.notes %}<h4>یادداشت</h4><p>{{ card.notes }}</p>{% endif %}
+            </div>
+          </details>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="inline-empty">هنوز مثال تأییدشده‌ای از کلاس ثبت نشده است.</div>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <h2>افزودن مثال</h2>
+      <p>متن تمیزشده با Gemini یا یادداشت خودت را اینجا ثبت کن. قبل از تأیید، این داده برای مدل ارسال نمی‌شود.</p>
+      <form method="post" action="/courses/{{ course.id }}/example-cards" class="stack-form">
+        <label class="field"><span>عنوان *</span><input name="title" required placeholder="مثلاً مثال قضیه بیز جلسه ۴"></label>
+        <div class="form-grid">
+          <label class="field"><span>مبحث</span><input name="topic" placeholder="احتمال شرطی"></label>
+          <label class="field"><span>نام روش</span><input name="method_name" placeholder="قضیه بیز"></label>
+          <label class="field"><span>نوع منبع</span>
+            <select name="source_kind">
+              <option value="class_note">یادداشت کلاس</option>
+              <option value="board_photo">عکس تخته</option>
+              <option value="video_clip">بخش ویدئو</option>
+              <option value="cleaned_transcript">متن تمیزشده</option>
+              <option value="other">سایر</option>
+            </select>
+          </label>
+          <label class="field"><span>مرجع</span><input name="source_reference" placeholder="صفحه ۱۲ یا 00:18:40"></label>
+        </div>
+        <label class="field"><span>صورت سؤال *</span><textarea name="question" rows="5" required></textarea></label>
+        <label class="field"><span>راه‌حل استاد *</span><textarea name="solution" rows="9" required></textarea></label>
+        <label class="field"><span>یادداشت تکمیلی</span><textarea name="notes" rows="3" placeholder="تأکید استاد، نمادگذاری یا مرحله مهم"></textarea></label>
+        <label class="field"><span>وضعیت</span>
+          <select name="status">
+            <option value="draft" selected>پیش‌نویس؛ وارد مدل نشود</option>
+            <option value="confirmed">تأییدشده؛ قابل استفاده در پاسخ‌ها</option>
+          </select>
+        </label>
+        <button class="button primary full">ذخیره کارت مثال</button>
+      </form>
     </div>
   </div>
 </section>

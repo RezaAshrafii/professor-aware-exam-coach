@@ -27,7 +27,7 @@ class ExamCoachService:
         self.llm = LLMService()
 
     def run(self, course: dict[str, Any], mode: str, user_input: str) -> dict[str, Any]:
-        chunks = repositories.list_chunks(int(course["id"]))
+        chunks = repositories.list_retrieval_items(int(course["id"]))
         query = f"{mode} {course.get('exam_scope', '')} {user_input}"
         evidence = retrieve(query, chunks, limit=settings.max_context_chunks)
         instructions, input_text = build_prompt(course, mode, user_input, evidence)
@@ -44,6 +44,7 @@ class ExamCoachService:
                 "filename": item["filename"],
                 "chunk_index": item["chunk_index"],
                 "score": item.get("score", 0),
+                "evidence_kind": item.get("evidence_kind", "source_chunk"),
             }
             for item in evidence
         ]

@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from app import repositories
 from app.config import settings
 from app.database import init_db
-from app.schemas import CourseCreate, MistakeCreate, RunRequest
+from app.schemas import CourseCreate, ExampleCardCreate, MistakeCreate, RunRequest
 from app.services.document_service import DocumentError, SUPPORTED_EXTENSIONS, chunk_text, extract_text
 from app.services.exam_coach_service import ExamCoachService
 
@@ -79,6 +79,7 @@ def course_page(request: Request, course_id: int) -> HTMLResponse:
             "sources": repositories.list_sources(course_id),
             "runs": repositories.list_runs(course_id),
             "mistakes": repositories.list_mistakes(course_id),
+            "example_cards": repositories.list_example_cards(course_id),
             "model_enabled": coach.llm.enabled,
         },
     )
@@ -187,3 +188,56 @@ def create_mistake(
 def delete_mistake(mistake_id: int, course_id: int = Form(...)) -> RedirectResponse:
     repositories.delete_mistake(mistake_id)
     return RedirectResponse(url=f"/courses/{course_id}#mistakes", status_code=303)
+
+
+@app.post("/courses/{course_id}/example-cards")
+def create_example_card(
+    course_id: int,
+    title: str = Form(...),
+    topic: str = Form(""),
+    question: str = Form(...),
+    solution: str = Form(...),
+    method_name: str = Form(""),
+    source_kind: str = Form("class_note"),
+    source_reference: str = Form(""),
+    notes: str = Form(""),
+    status: str = Form("draft"),
+) -> RedirectResponse:
+    require_course(course_id)
+    payload = ExampleCardCreate(
+        title=title,
+        topic=topic,
+        question=question,
+        solution=solution,
+        method_name=method_name,
+        source_kind=source_kind,
+        source_reference=source_reference,
+        notes=notes,
+        status=status,
+    )
+    repositories.create_example_card(course_id, payload)
+    return RedirectResponse(url=f"/courses/{course_id}#examples", status_code=303)
+
+
+@app.post("/example-cards/{card_id}/status")
+def change_example_card_status(
+    card_id: int, course_id: int = Form(...), status: str = Form(...)
+) -> RedirectResponse:
+    require_course(course_id)
+    if status not in {"draft", "confirmed"}:
+        raise HTTPException(status_code=400, detail="Unknown example card status")
+    card = repositories.get_example_card(card_id)
+    if not card or int(card["course_id"]) != course_id:
+        raise HTTPException(status_code=404, detail="Example card not found")
+    repositories.update_example_card_status(card_id, status)
+    return RedirectResponse(url=f"/courses/{course_id}#examples", status_code=303)
+
+
+@app.post("/example-cards/{card_id}/delete")
+def remove_example_card(card_id: int, course_id: int = Form(...)) -> RedirectResponse:
+    require_course(course_id)
+    card = repositories.get_example_card(card_id)
+    if not card or int(card["course_id"]) != course_id:
+        raise HTTPException(status_code=404, detail="Example card not found")
+    repositories.delete_example_card(card_id)
+    return RedirectResponse(url=f"/courses/{course_id}#examples", status_code=303)

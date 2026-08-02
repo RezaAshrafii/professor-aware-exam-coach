@@ -15,7 +15,7 @@ target-version = "py311"
 exclude = ["data"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E9", "F"]
 
 [tool.ruff.format]
 quote-style = "double"

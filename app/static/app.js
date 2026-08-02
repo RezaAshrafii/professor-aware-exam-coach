@@ -92,7 +92,7 @@ function evidenceReferencesHtml(references) {
   return `<div class="reference-list">${references.map((ref) => `
     <div class="reference-chip">
       <strong>منبع ${escapeHtml(ref.source_number)}</strong>
-      <span>${escapeHtml(ref.filename)} · قطعه ${escapeHtml(ref.chunk_index)}</span>
+      <span>${escapeHtml(ref.filename)} · ${ref.chunk_index == null ? 'کارت مثال' : `قطعه ${escapeHtml(ref.chunk_index)}`}</span>
       <small>${escapeHtml(ref.support)}</small>
     </div>`).join('')}</div>`;
 }
@@ -242,7 +242,7 @@ function reliabilityHtml(data) {
 
 function evidenceHtml(items) {
   return items?.length
-    ? `<details class="evidence"><summary>${items.length} قطعه منبع استفاده شد</summary>${items.map((item, index) => `<div><strong>منبع ${index + 1}: ${escapeHtml(item.filename)}</strong><small>قطعه ${escapeHtml(item.chunk_index)} · امتیاز ${escapeHtml(item.score ?? 0)}</small></div>`).join('')}</details>`
+    ? `<details class="evidence"><summary>${items.length} شاهد استفاده شد</summary>${items.map((item, index) => `<div><strong>منبع ${index + 1}: ${escapeHtml(item.filename)}</strong><small>${item.evidence_kind === 'example_card' ? 'کارت مثال تأییدشده' : `قطعه ${escapeHtml(item.chunk_index)}`} · امتیاز ${escapeHtml(item.score ?? 0)}</small></div>`).join('')}</details>`
     : '<div class="notice">منبع مرتبطی بازیابی نشد؛ خروجی با عدم‌قطعیت بیشتری تولید شده است.</div>';
 }
 
