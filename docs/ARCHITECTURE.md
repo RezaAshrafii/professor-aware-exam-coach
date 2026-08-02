@@ -45,3 +45,8 @@ SQLite + local uploads
 - چند frontend package؛
 - Tailwind/shadcn dependency؛
 - abstraction عمومی قبل از نیاز واقعی.
+
+
+## Frontend connectivity (v0.6.0)
+
+The browser calls `/backend/*` on the Next.js origin. Next rewrites that path to the local FastAPI service. This keeps the runtime simple while avoiding browser CORS as a normal dependency. FastAPI CORS remains enabled only for direct local development access.
