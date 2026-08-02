@@ -51,3 +51,13 @@ git push -u origin feat/method-cards
 ```
 
 سپس در GitHub Pull Request بساز.
+
+## بررسی رابط محصول پس از push
+
+در اولین Pull Request، هر سه مرحله زیر باید سبز شوند:
+
+- backend tests و contract checks؛
+- TypeScript type-check؛
+- Next.js production build.
+
+پس از سبزشدن CI، تست دستی `USER_VERIFICATION.md` را انجام بده.
