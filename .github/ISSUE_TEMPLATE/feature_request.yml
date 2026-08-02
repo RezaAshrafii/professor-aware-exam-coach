@@ -1,0 +1,28 @@
+name: Feature request
+description: پیشنهاد یک قابلیت محدود و قابل سنجش
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: مسئله کاربر
+      description: این قابلیت دقیقاً چه درد واقعی را حل می‌کند؟
+    validations:
+      required: true
+  - type: textarea
+    id: minimum
+    attributes:
+      label: کوچک‌ترین راه‌حل قابل قبول
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: معیار پذیرش
+      description: از کجا بفهمیم قابلیت درست کار می‌کند؟
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: موارد خارج از دامنه
