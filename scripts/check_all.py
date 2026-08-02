@@ -16,6 +16,7 @@ def main() -> int:
     run(sys.executable, "-m", "compileall", "-q", "app", "tests")
     run(sys.executable, "-m", "ruff", "check", "--select", "E9,F", ".")
     run(sys.executable, "-m", "pytest")
+    run("node", "scripts/check_frontend_syntax.mjs")
     print("\nAll checks passed.")
     return 0
 

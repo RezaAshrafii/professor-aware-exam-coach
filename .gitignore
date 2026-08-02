@@ -14,3 +14,11 @@ data/*
 !data/uploads/
 data/uploads/*
 !data/uploads/.gitkeep
+
+# Next.js frontend
+web/node_modules/
+web/.next/
+web/out/
+web/.env.local
+web/.vercel/
+*.tsbuildinfo
