@@ -30,6 +30,20 @@ class MistakeCreate(BaseModel):
     severity: str = Field(default="medium", pattern="^(low|medium|high)$")
 
 
+class ExampleCardCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    topic: str = Field(default="", max_length=200)
+    question: str = Field(min_length=1, max_length=10000)
+    solution: str = Field(min_length=1, max_length=20000)
+    method_name: str = Field(default="", max_length=200)
+    source_kind: Literal[
+        "class_note", "board_photo", "video_clip", "cleaned_transcript", "other"
+    ] = "class_note"
+    source_reference: str = Field(default="", max_length=500)
+    notes: str = Field(default="", max_length=3000)
+    status: Literal["draft", "confirmed"] = "draft"
+
+
 class EvidenceReference(BaseModel):
     """Reference to one retrieved chunk shown to the model in the current run."""
 

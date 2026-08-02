@@ -44,6 +44,8 @@ def retrieve(query: str, chunks: list[dict[str, Any]], limit: int = 8) -> list[d
             idf = math.log((n_docs + 1) / (document_frequency[term] + 1)) + 1.0
             score += (1.0 + math.log(counts[term])) * idf * (1.0 + math.log(qtf))
         score /= length_norm
+        if chunk.get("evidence_kind") == "example_card":
+            score *= 1.2
         if score > 0:
             scored.append((score, chunk))
 

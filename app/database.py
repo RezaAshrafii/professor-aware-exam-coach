@@ -74,6 +74,26 @@ CREATE TABLE IF NOT EXISTS mistakes (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS example_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    topic TEXT NOT NULL DEFAULT '',
+    question TEXT NOT NULL,
+    solution TEXT NOT NULL,
+    method_name TEXT NOT NULL DEFAULT '',
+    source_kind TEXT NOT NULL DEFAULT 'class_note',
+    source_reference TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'confirmed')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_example_cards_course ON example_cards(course_id);
+CREATE INDEX IF NOT EXISTS idx_example_cards_status ON example_cards(course_id, status);
 """
 
 
