@@ -22,35 +22,37 @@ Professor-Aware Exam Coach یک ابزار شخصی و local-first برای آم
 - fine-tuning؛
 - شبکه اجتماعی یا چندکاربره؛
 - analytics پژوهشی سنگین؛
-- React/Next.js صرفاً برای نمایش تکنولوژی؛
+- frontend framework جدید صرفاً برای نمایش تکنولوژی؛
 - پردازش کامل ویدئو یا OCR پیچیده.
 
 ## 3. Current architecture
 
 ```text
-Jinja + Vanilla JavaScript UI
-            ↓
-         FastAPI
-            ↓
+Next.js product UI + Jinja fallback
+                ↓
+        FastAPI JSON/form API
+                ↓
 Services: retrieval / prompt / LLM validation
-            ↓
-       Repositories
-            ↓
-     SQLite + local files
+                ↓
+          Repositories
+                ↓
+        SQLite + local files
 ```
 
 این modular monolith برای ابزار تک‌کاربره کافی است.
 
 ## 4. Code boundaries
 
-- `main.py`: route و orchestration
+- `main.py`: برنامه FastAPI و routeهای UI fallback
+- `api_routes.py`: قرارداد JSON مورد استفاده Next.js
 - `schemas.py`: قرارداد داده
 - `repositories.py`: تمام SQL
 - `services/retrieval_service.py`: ranking خالص
 - `services/prompt_service.py`: policy و prompt
 - `services/llm_service.py`: provider، parsing، validation و repair
 - `services/exam_coach_service.py`: هماهنگ‌کننده use case
-- `templates/static`: UI
+- `templates/static`: UI قدیمی و fallback
+- `web/`: رابط محصول Next.js و TypeScript
 
 ## 5. Data model
 
@@ -61,7 +63,7 @@ Services: retrieval / prompt / LLM validation
 - `mistakes`: دفترچه خطا
 - `example_cards`: سؤال و راه‌حل ثبت‌شده استاد
 
-قانون v0.4.0: فقط Example Card با وضعیت `confirmed` می‌تواند وارد retrieval شود.
+قانون ثابت از v0.4.0: فقط Example Card با وضعیت `confirmed` می‌تواند وارد retrieval شود.
 
 ## 6. Git workflow
 
@@ -89,12 +91,18 @@ Services: retrieval / prompt / LLM validation
 ### v0.4.0 — completed
 
 - GitHub repository foundation
-- CI and contribution files
 - Example Card
-- draft/confirmed gate
-- confirmed examples in retrieval
+- draft/confirmed evidence gate
 
-### v0.5.0
+### v0.5.0 — completed
+
+- Next.js product UI
+- JSON API for all current workflows
+- responsive Persian RTL workspace
+- frontend type-check/build CI gate
+- legacy UI retained as fallback
+
+### v0.6.0
 
 Method Card ساده:
 
@@ -102,32 +110,31 @@ Method Card ساده:
 - شرایط استفاده
 - مراحل اجباری
 - نمادگذاری استاد
-- شواهد Example Card
-- وضعیت confirmed/draft
-
-### v0.6.0
-
-Allowed Method Enforcement:
-
-- انتخاب روش پیش از تولید پاسخ
-- هشدار روش خارج از منابع
-- blocking در نسخه برگه، مگر کاربر صریحاً روش استاندارد خارج از جزوه را بخواهد
-- grading سخت‌گیرانه بر اساس مراحل روش
+- اتصال به Example Cardهای تأییدشده
+- وضعیت draft/confirmed
 
 ### v0.7.0
 
+Allowed Method Enforcement:
+
+- انتخاب روش تأییدشده پیش از پاسخ
+- هشدار روش خارج از منابع
+- grading سخت‌گیرانه بر اساس مراحل روش
+
+### v0.8.0
+
 پایدارسازی:
 
-- export/import کامل workspace
-- preview source/chunk
-- bug fixes بر اساس استفاده واقعی
-- prompt regression fixtureهای ثابت
+- export/import workspace
+- source/chunk preview
+- prompt regression fixtures
+- رفع باگ‌های استفاده واقعی
 
 ### v1.0.0
 
 - قرارداد داده پایدار
 - نصب و اجرای روشن
-- تست‌های اصلی سبز
+- تست‌های backend و frontend سبز
 - استفاده موفق روی چند درس واقعی
 - مستندات کامل
 
