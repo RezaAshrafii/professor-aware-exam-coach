@@ -44,6 +44,10 @@ class ExampleCardCreate(BaseModel):
     status: Literal["draft", "confirmed"] = "draft"
 
 
+class ExampleCardStatusUpdate(BaseModel):
+    status: Literal["draft", "confirmed"]
+
+
 class EvidenceReference(BaseModel):
     """Reference to one retrieved chunk shown to the model in the current run."""
 

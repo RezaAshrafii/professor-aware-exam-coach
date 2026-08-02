@@ -6,16 +6,17 @@ import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import repositories
+from app.api_routes import coach as api_coach, router as api_router
 from app.config import settings
 from app.database import init_db
 from app.schemas import CourseCreate, ExampleCardCreate, MistakeCreate, RunRequest
 from app.services.document_service import DocumentError, SUPPORTED_EXTENSIONS, chunk_text, extract_text
-from app.services.exam_coach_service import ExamCoachService
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -26,9 +27,17 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.web_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.include_router(api_router)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
-coach = ExamCoachService()
+coach = api_coach
 
 
 def require_course(course_id: int) -> dict:
@@ -162,13 +171,6 @@ def run_coach(course_id: int, payload: RunRequest) -> JSONResponse:
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Model request failed: {exc}") from exc
     return JSONResponse(result)
-
-
-@app.post("/api/courses/{course_id}/mistakes")
-def create_mistake_api(course_id: int, payload: MistakeCreate) -> JSONResponse:
-    require_course(course_id)
-    mistake_id = repositories.create_mistake(course_id, payload)
-    return JSONResponse({"id": mistake_id, "status": "saved"}, status_code=201)
 
 
 @app.post("/courses/{course_id}/mistakes")

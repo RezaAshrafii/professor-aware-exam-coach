@@ -146,6 +146,11 @@ def list_mistakes(course_id: int) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+def get_mistake(mistake_id: int) -> dict[str, Any] | None:
+    with get_connection() as db:
+        return _dict(db.execute("SELECT * FROM mistakes WHERE id=?", (mistake_id,)).fetchone())
+
+
 def delete_mistake(mistake_id: int) -> None:
     with get_connection() as db:
         db.execute("DELETE FROM mistakes WHERE id=?", (mistake_id,))
