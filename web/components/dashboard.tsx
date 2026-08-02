@@ -91,9 +91,12 @@ export function Dashboard() {
             <span>آمادگی استادمحور برای امتحان</span>
           </div>
         </div>
-        <div className={`connection ${backendReady ? "online" : backendReady === false ? "offline" : "checking"}`}>
-          <span className="connection-dot" />
-          {backendReady ? "هسته متصل است" : backendReady === false ? "هسته در دسترس نیست" : "در حال بررسی"}
+        <div className="topbar-actions">
+          <span className="version-label">v0.6</span>
+          <div className={`connection ${backendReady ? "online" : backendReady === false ? "offline" : "checking"}`}>
+            <span className="connection-dot" />
+            {backendReady ? "هسته متصل است" : backendReady === false ? "هسته در دسترس نیست" : "در حال بررسی"}
+          </div>
         </div>
       </header>
 
