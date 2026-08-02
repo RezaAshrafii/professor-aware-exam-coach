@@ -1,54 +1,39 @@
-# Professor-Aware Exam Coach — v0.3.0
+# Professor-Aware Exam Coach — v0.4.0
 
-A local-first university exam-preparation tool grounded in the real materials of each course and professor.
+یک ابزار local-first برای آمادگی امتحان‌های ریاضی و آمار بر اساس منابع واقعی همان درس و روش‌های تدریس‌شده استاد.
 
-## What v0.3.0 adds
+## هدف فعلی
 
-### Reliability fixes
+این پروژه قرار نیست یک پلتفرم آموزشی عظیم یا پروژه پژوهشی سنگین باشد. هدف عملی آن این است که:
 
-- Every structured `EvidenceReference` is cross-checked against the exact evidence retrieved for that run.
-- `source_number`, `filename`, and `chunk_index` must all match; a syntactically valid but hallucinated citation is rejected.
-- Invalid structured output receives exactly one repair attempt with the validation error and the allowed evidence catalog.
-- A successful repair is marked as `recovered`.
-- A failed repair remains an explicit `invalid_fallback`; it is never presented as a valid grading/profile/plan object.
-- Failure of the repair API request itself falls back to the first raw response with a visible validation warning.
+- منابع هر درس جدا بمانند؛
+- مثال‌های واقعی کلاس به‌شکل قابل استفاده ثبت شوند؛
+- پاسخ‌ها بر اساس شواهد همان درس تولید و سخت‌گیرانه بررسی شوند؛
+- دانشجو قبل از امتحان بتواند بدون AI پاسخ کامل و قابل دفاع بنویسد.
 
-### Structured UI
+## قابلیت‌های v0.4.0
 
-- Dedicated professor-profile rendering with claim status, confidence, and evidence references.
-- Dedicated grading-report rendering with score breakdown, missing steps, error classes, corrected answer, professor-score range, and confidence.
-- Dedicated study-plan rendering with priorities, daily tasks, measurable completion criteria, and timing.
-- Visible reliability banners for `valid`, `recovered`, and `invalid_fallback` responses.
-- Raw fallback output is clearly labeled as unvalidated instead of silently rendered as a normal report.
-- Invalid fallback runs are persisted with an explicit warning prefix, so the history view also cannot present them as normal reports.
+- workspace جدا برای هر درس و استاد؛
+- ورود PDF، DOCX، TXT و Markdown؛
+- lexical retrieval محلی؛
+- خروجی‌های ساختاریافته و اعتبارسنجی‌شده برای profile، grading و study plan؛
+- رد citation جعلی و یک repair attempt کنترل‌شده؛
+- دفترچه خطا؛
+- **Example Card** برای ثبت سؤال و راه‌حل واقعی استاد؛
+- وضعیت `draft` و `confirmed` برای مثال‌ها؛
+- فقط مثال‌های تأییدشده وارد retrieval و prompt می‌شوند؛
+- اولویت بیشتر برای مثال تأییدشده در retrieval؛
+- UI فارسی RTL؛
+- ساختار GitHub استاندارد، CI، issue template، PR template و Dependabot؛
+- تاریخچه واقعی Git با branch و commitهای Conventional Commits.
 
-### Mistake workflow
+## اجرای سریع در ویندوز
 
-- A `GradingReport.suggested_mistake` can be saved to the mistake ledger.
-- Saving requires an explicit browser confirmation.
-- A new JSON API endpoint accepts the already validated `MistakeCreate` contract.
+فایل `start_windows.bat` را اجرا کن.
 
-## Existing capabilities
-
-- Isolated workspace for each course and professor.
-- PDF, DOCX, TXT, and Markdown ingestion.
-- Local text extraction and chunking.
-- Lightweight lexical retrieval without a vector database.
-- Nine modes: professor profile, source analysis, teaching, guided practice, mock exam, grading, exam-sheet answer, oral defense, and study planning.
-- Run history and retrieved evidence display.
-- Manual and grading-assisted mistake ledger.
-- Responsive Persian RTL interface.
-- Optional OpenAI adapter through the Responses API.
-- Offline demo mode.
-
-## Quick start on Windows
-
-Double-click `start_windows.bat`.
-
-Manual setup:
+راه‌اندازی دستی:
 
 ```powershell
-cd professor_aware_exam_coach_v0_3_0
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
@@ -56,67 +41,66 @@ copy .env.example .env
 python run.py
 ```
 
-Open:
+برنامه در این آدرس باز می‌شود:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-## Configure a model
+## اجرای تست‌ها
 
-Set these values in `.env`:
-
-```env
-OPENAI_API_KEY=...
-OPENAI_MODEL=...
-```
-
-The model name is deliberately not hard-coded. API credentials remain server-side.
-
-## Structured-output API states
-
-Only `profile`, `grade`, and `plan` use structured contracts.
-
-A run now returns:
-
-```json
-{
-  "structured_output": {},
-  "schema": "GradingReport",
-  "validation_error": null,
-  "validation_status": "valid",
-  "retry_count": 0,
-  "first_validation_error": null
-}
-```
-
-Possible `validation_status` values:
-
-| Status | Meaning |
-|---|---|
-| `not_applicable` | Normal text mode; no structured schema was requested. |
-| `valid` | First response passed schema and evidence-reference validation. |
-| `recovered` | First response failed; one repair response passed. |
-| `invalid_fallback` | The repair also failed or could not be requested; only raw text is available. |
-
-## Tests
+تست‌های معمول:
 
 ```powershell
 pytest -q
 ```
 
-Current release: **20 tests passing**.
+تمام بررسی‌های توسعه:
 
-Manual release-gate checks are documented in [USER_VERIFICATION.md](USER_VERIFICATION.md). Do not move to the next phase until its required checks pass on at least one real course workspace.
+```powershell
+pip install -r requirements-dev.txt
+python scripts/check_all.py
+```
 
-## Current limitations
+## ثبت مثال استاد
 
-- Structured metadata is rendered for the current response but run history still stores the display output in the existing `runs.output` field.
-- Workspace ZIP export/import is not implemented.
-- Source/chunk preview is not implemented.
-- Fixed real evidence-pack prompt regression fixtures are not yet included.
-- Mock exams are not stateful and have no server-enforced hidden answer key.
-- Retrieval remains lexical until real-course benchmarks justify embeddings.
-- Scanned PDFs are not OCR-processed.
+1. وارد workspace درس شو.
+2. تب «مثال‌های استاد» را باز کن.
+3. متن تمیزشده سؤال و راه‌حل را وارد کن.
+4. ابتدا به‌صورت پیش‌نویس ذخیره کن.
+5. آن را با جزوه، تخته یا ویدئو تطبیق بده.
+6. پس از تأیید، وضعیت را به `confirmed` تغییر بده.
 
-See [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) for architecture, boundaries, phase gates, and the ordered backlog.
+کارت پیش‌نویس هرگز برای مدل ارسال نمی‌شود.
+
+## انتقال به GitHub
+
+این بسته خودش یک repository واقعی با `.git`، branchها، merge commit و tag نسخه است. دستورهای دقیق در [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md) قرار دارند.
+
+خلاصه:
+
+```powershell
+git remote add origin https://github.com/USERNAME/REPOSITORY.git
+git push -u origin main
+git push origin --all
+git push origin --tags
+```
+
+## مسیر کوتاه تا نسخه 1.0
+
+- `v0.5.0`: Method Card و فهرست روش‌های مجاز
+- `v0.6.0`: کنترل اجباری روش مجاز در تولید و تصحیح پاسخ
+- `v0.7.0`: export/import، preview منابع و رفع باگ‌های استفاده واقعی
+- `v1.0.0`: نسخه پایدار شخصی
+
+جزئیات در [docs/ROADMAP.md](docs/ROADMAP.md) است.
+
+## محدودیت‌های فعلی
+
+- Example Card به‌صورت دستی یا از متن تمیزشده وارد می‌شود؛ OCR و پردازش ویدئو داخل برنامه نیست.
+- هنوز Method Registry مستقل نداریم.
+- برنامه نمی‌تواند نمره کامل را تضمین کند.
+- retrieval هنوز lexical است.
+- رابط فعلی Jinja/JavaScript است؛ مهاجرت به React/Next.js فعلاً عمداً انجام نشده چون برای نسخه شخصی لازم نیست.
+
+راهنمای تست دستی نسخه در [USER_VERIFICATION.md](USER_VERIFICATION.md) قرار دارد.

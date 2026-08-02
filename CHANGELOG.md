@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 — GitHub foundation and professor examples
+
+- Added a real Git repository history starting from the validated v0.3.0 baseline.
+- Added short-lived feature branches, merge commits, Conventional Commit messages, and release documentation.
+- Added GitHub Actions CI using Python 3.11, compile checks, Ruff fatal-error checks, and pytest.
+- Added issue templates, a pull request template, Dependabot, contribution guidance, security guidance, and Git workflow documentation.
+- Added `example_cards` persistence for questions and solutions taken from class notes, board photos, video clips, or cleaned transcripts.
+- Added draft and confirmed states; draft cards are never exposed to the model.
+- Added a dedicated Persian UI for creating, reviewing, confirming, reverting, and deleting professor examples.
+- Added confirmed Example Cards to retrieval as explicit evidence with a small ranking boost.
+- Added course-isolation tests so a card cannot be changed through another course workspace.
+- Added 22 passing automated tests.
+
 ## 0.3.0 — Evidence integrity and structured UI
 
 - Added runtime cross-checking of every structured evidence reference against the retrieved evidence for the current run.
