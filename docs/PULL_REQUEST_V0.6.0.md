@@ -17,7 +17,7 @@
 
 ## Verification
 
-- 29 backend/contract tests
+- 30 backend/contract tests
 - Exact browser preflight regression
 - TypeScript syntax check
 - Live FastAPI smoke test

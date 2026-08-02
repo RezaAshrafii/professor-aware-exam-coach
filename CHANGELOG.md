@@ -18,7 +18,7 @@
 
 ### Verification
 
-- 29 Python tests pass.
+- 30 Python tests pass.
 - FastAPI live health and exact browser-style CORS preflight pass.
 - TypeScript syntax and frontend proxy contract checks pass.
 - Production Next.js build remains a GitHub/system gate because the artifact environment npm registry lacks `@types/node`.
