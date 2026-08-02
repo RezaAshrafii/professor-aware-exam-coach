@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Exam Coach{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script defer src="/static/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">E</span>
+      <span><strong>Exam Coach</strong><small>Professor-aware preparation</small></span>
+    </a>
+    <div class="topbar-actions">
+      <span class="status-dot"></span>
+      <span>Local workspace</span>
+    </div>
+  </header>
+  <main class="shell">
+    {% block content %}{% endblock %}
+  </main>
+  <div id="toast" class="toast" aria-live="polite"></div>
+</body>
+</html>

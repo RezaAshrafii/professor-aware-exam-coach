@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}{{ course.name }} | Exam Coach{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">درس‌ها</a><span>/</span><span>{{ course.name }}</span></div>
+<section class="course-hero">
+  <div class="course-title-row">
+    <span class="course-icon large">{{ course.name[:1] }}</span>
+    <div><span class="eyebrow">COURSE WORKSPACE</span><h1>{{ course.name }}</h1><p>{{ course.professor or 'استاد ثبت نشده' }} · {{ course.term or 'ترم نامشخص' }}</p></div>
+  </div>
+  <div class="hero-actions">
+    <button class="button ghost" data-modal-open="edit-course">ویرایش درس</button>
+    <form method="post" action="/courses/{{ course.id }}/delete" data-confirm="کل درس و تمام داده‌هایش حذف شود؟"><button class="button danger-text">حذف</button></form>
+  </div>
+</section>
+
+<div class="course-summary">
+  <div><span>تاریخ امتحان</span><strong>{{ course.exam_date or 'ثبت نشده' }}</strong></div>
+  <div><span>نمره هدف</span><strong>{{ course.target_grade if course.target_grade is not none else '—' }}</strong></div>
+  <div><span>زمان روزانه</span><strong>{{ course.daily_minutes }} دقیقه</strong></div>
+  <div><span>منابع</span><strong>{{ sources|length }}</strong></div>
+</div>
+
+<nav class="tabs" data-tabs>
+  <button class="active" data-tab="coach">مربی</button>
+  <button data-tab="sources">منابع</button>
+  <button data-tab="history">تاریخچه</button>
+  <button data-tab="mistakes">دفترچه خطا</button>
+  <button data-tab="settings">اطلاعات درس</button>
+</nav>
+
+<section class="tab-panel active" data-panel="coach">
+  <div class="workspace-grid">
+    <aside class="mode-panel">
+      <h3>حالت کار</h3>
+      <div class="mode-list" id="mode-list">
+        <button class="mode active" data-mode="profile"><span>◈</span><div><strong>پروفایل استاد</strong><small>استنباط سبک و معیارها</small></div></button>
+        <button class="mode" data-mode="analyze"><span>⌁</span><div><strong>تحلیل منابع</strong><small>نقشه مباحث و اولویت‌ها</small></div></button>
+        <button class="mode" data-mode="teach"><span>▣</span><div><strong>آموزش مبحث</strong><small>از شهود تا سؤال امتحانی</small></div></button>
+        <button class="mode" data-mode="guided"><span>→</span><div><strong>تمرین هدایت‌شده</strong><small>راهنمایی مرحله‌ای</small></div></button>
+        <button class="mode" data-mode="exam"><span>◷</span><div><strong>آزمون شبیه‌سازی</strong><small>بدون پاسخ و راهنمایی</small></div></button>
+        <button class="mode" data-mode="grade"><span>✓</span><div><strong>مصحح سخت‌گیر</strong><small>بارم و تشخیص خطا</small></div></button>
+        <button class="mode" data-mode="exam_answer"><span>✎</span><div><strong>نسخه برگه</strong><small>حل کوتاه و نمره‌گیر</small></div></button>
+        <button class="mode" data-mode="oral"><span>●</span><div><strong>دفاع شفاهی</strong><small>سؤال یکی‌یکی</small></div></button>
+        <button class="mode" data-mode="plan"><span>▦</span><div><strong>برنامه امتحان</strong><small>روزانه و قابل سنجش</small></div></button>
+      </div>
+    </aside>
+
+    <div class="coach-panel">
+      <div class="coach-header">
+        <div><span class="eyebrow">ACTIVE MODE</span><h2 id="mode-title">پروفایل استاد</h2></div>
+        {% if model_enabled %}<span class="pill success">مدل متصل است</span>{% else %}<span class="pill warning">حالت آزمایشی</span>{% endif %}
+      </div>
+      <div id="coach-output" class="coach-output empty-output">
+        <div class="output-placeholder"><span>◌</span><h3>یک درخواست بنویس</h3><p>خروجی همراه با شواهد بازیابی‌شده در همین بخش نمایش داده می‌شود.</p></div>
+      </div>
+      <form id="coach-form" data-course-id="{{ course.id }}">
+        <textarea id="coach-prompt" rows="5" placeholder="مثلاً: بر اساس منابع فعلی پروفایل اولیه استاد را بساز و موارد نامطمئن را جدا کن." required></textarea>
+        <div class="composer-footer">
+          <span>{{ sources|length }} منبع در دسترس</span>
+          <button class="button primary" id="run-button">اجرا</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="tab-panel" data-panel="sources" id="sources">
+  <div class="two-column">
+    <div class="panel">
+      <div class="panel-heading"><div><h2>منابع درس</h2><p>PDF، Word، متن و Markdown</p></div></div>
+      {% if sources %}
+      <div class="source-list">
+        {% for source in sources %}
+        <div class="source-row">
+          <span class="file-icon">{{ source.source_type|upper }}</span>
+          <div><strong>{{ source.filename }}</strong><small>{{ source.character_count }} نویسه · {{ source.created_at }}</small></div>
+          <form method="post" action="/sources/{{ source.id }}/delete" data-confirm="این منبع حذف شود؟"><button class="icon-button">×</button></form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<div class="inline-empty">هنوز منبعی اضافه نشده است.</div>{% endif %}
+    </div>
+    <div class="panel upload-panel">
+      <h2>افزودن منبع</h2>
+      <p>برای نسخه اول، فایل‌های متنی استخراج می‌شوند و به قطعه‌های قابل بازیابی تقسیم می‌شوند.</p>
+      <form method="post" action="/courses/{{ course.id }}/sources" enctype="multipart/form-data" class="upload-form">
+        <label class="dropzone"><input type="file" name="file" accept=".pdf,.docx,.txt,.md" required><span>فایل را انتخاب کن</span><small>حداکثر ۲۰ مگابایت</small></label>
+        <button class="button primary full">بارگذاری و پردازش</button>
+      </form>
+      <div class="notice">PDF اسکن‌شده در این نسخه OCR نمی‌شود. برای آن باید متن قابل انتخاب یا نسخه متنی داشته باشی.</div>
+    </div>
+  </div>
+</section>
+
+<section class="tab-panel" data-panel="history">
+  <div class="panel">
+    <div class="panel-heading"><div><h2>تاریخچه اجراها</h2><p>آخرین خروجی‌های ذخیره‌شده</p></div></div>
+    {% if runs %}
+    <div class="run-list">
+      {% for run in runs %}
+      <details class="run-item">
+        <summary><div><span class="pill">{{ run.mode }}</span><strong>{{ run.user_input[:90] }}{% if run.user_input|length > 90 %}…{% endif %}</strong></div><small>{{ run.created_at }} · {{ run.provider }}</small></summary>
+        <div class="run-content"><pre>{{ run.output }}</pre></div>
+      </details>
+      {% endfor %}
+    </div>
+    {% else %}<div class="inline-empty">هنوز اجرایی ثبت نشده است.</div>{% endif %}
+  </div>
+</section>
+
+<section class="tab-panel" data-panel="mistakes" id="mistakes">
+  <div class="two-column mistakes-layout">
+    <div class="panel">
+      <div class="panel-heading"><div><h2>خطاهای ثبت‌شده</h2><p>خطاها دستی ثبت می‌شوند یا از گزارش تصحیح، فقط پس از تأیید تو ذخیره می‌شوند.</p></div></div>
+      {% if mistakes %}
+      <div class="mistake-list">
+        {% for item in mistakes %}
+        <article class="mistake-card severity-{{ item.severity }}">
+          <div class="mistake-top"><div><span class="pill">{{ item.category or 'بدون دسته' }}</span><strong>{{ item.topic or 'موضوع نامشخص' }}</strong></div><form method="post" action="/mistakes/{{ item.id }}/delete"><input type="hidden" name="course_id" value="{{ course.id }}"><button class="icon-button">×</button></form></div>
+          <p>{{ item.description }}</p>
+          {% if item.prevention %}<small>راه جلوگیری: {{ item.prevention }}</small>{% endif %}
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}<div class="inline-empty">هنوز خطایی ثبت نشده است.</div>{% endif %}
+    </div>
+    <div class="panel">
+      <h2>ثبت خطا</h2>
+      <form method="post" action="/courses/{{ course.id }}/mistakes" class="stack-form">
+        <label class="field"><span>مبحث</span><input name="topic" placeholder="مثلاً توزیع شرطی"></label>
+        <label class="field"><span>دسته</span><input name="category" placeholder="ضعف مفهومی، محاسبات، زمان..."></label>
+        <label class="field"><span>شرح خطا *</span><textarea name="description" rows="4" required></textarea></label>
+        <label class="field"><span>راه جلوگیری</span><textarea name="prevention" rows="3"></textarea></label>
+        <label class="field"><span>شدت</span><select name="severity"><option value="low">کم</option><option value="medium" selected>متوسط</option><option value="high">زیاد</option></select></label>
+        <button class="button primary full">ثبت خطا</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="tab-panel" data-panel="settings">
+  <div class="panel readable">
+    <h2>اطلاعات درس</h2>
+    <dl class="detail-list"><div><dt>محدوده امتحان</dt><dd>{{ course.exam_scope or 'ثبت نشده' }}</dd></div><div><dt>یادداشت</dt><dd>{{ course.notes or 'ثبت نشده' }}</dd></div></dl>
+  </div>
+</section>
+
+<div class="modal" id="edit-course" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel">
+    <div class="modal-header"><div><h2>ویرایش درس</h2></div><button class="icon-button" data-modal-close>×</button></div>
+    <form method="post" action="/courses/{{ course.id }}/update" class="form-grid">
+      <label class="field span-2"><span>نام درس *</span><input name="name" required value="{{ course.name }}"></label>
+      <label class="field"><span>استاد</span><input name="professor" value="{{ course.professor }}"></label>
+      <label class="field"><span>ترم</span><input name="term" value="{{ course.term }}"></label>
+      <label class="field"><span>تاریخ امتحان</span><input type="date" name="exam_date" value="{{ course.exam_date }}"></label>
+      <label class="field"><span>نمره هدف</span><input type="number" name="target_grade" min="0" max="20" step="0.25" value="{{ course.target_grade if course.target_grade is not none else '' }}"></label>
+      <label class="field"><span>زمان روزانه</span><input type="number" name="daily_minutes" min="10" max="720" value="{{ course.daily_minutes }}"></label>
+      <label class="field span-2"><span>محدوده امتحان</span><textarea name="exam_scope" rows="3">{{ course.exam_scope }}</textarea></label>
+      <label class="field span-2"><span>یادداشت</span><textarea name="notes" rows="3">{{ course.notes }}</textarea></label>
+      <div class="form-actions span-2"><button type="button" class="button ghost" data-modal-close>انصراف</button><button class="button primary">ذخیره</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

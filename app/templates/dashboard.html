@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}درس‌ها | Exam Coach{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <span class="eyebrow">WORKSPACE</span>
+    <h1>آمادگی امتحان، بر اساس منابع واقعی هر استاد</h1>
+    <p>برای هر درس یک فضای جدا بساز؛ جزوه و نمونه‌سؤال را وارد کن، پروفایل استاد را استخراج کن و آزمون‌های هدفمند بگیر.</p>
+  </div>
+  <button class="button primary" data-modal-open="new-course">درس جدید</button>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card"><strong>{{ courses|length }}</strong><span>درس فعال</span></article>
+  <article class="stat-card"><strong>{{ courses|sum(attribute='source_count') }}</strong><span>منبع بارگذاری‌شده</span></article>
+  <article class="stat-card"><strong>{{ courses|sum(attribute='run_count') }}</strong><span>اجرای مربی</span></article>
+  <article class="stat-card"><strong>{{ courses|sum(attribute='mistake_count') }}</strong><span>خطای ثبت‌شده</span></article>
+</section>
+
+<section class="section-heading">
+  <div><h2>درس‌ها</h2><p>هر استاد و درس، پروفایل و شواهد مستقل دارد.</p></div>
+</section>
+
+{% if courses %}
+<div class="course-grid">
+  {% for course in courses %}
+  <a class="course-card" href="/courses/{{ course.id }}">
+    <div class="course-card-top">
+      <span class="course-icon">{{ course.name[:1] }}</span>
+      <span class="pill">{{ course.term or 'ترم نامشخص' }}</span>
+    </div>
+    <h3>{{ course.name }}</h3>
+    <p>{{ course.professor or 'استاد ثبت نشده' }}</p>
+    <div class="course-meta">
+      <span>{{ course.source_count }} منبع</span>
+      <span>{{ course.run_count }} اجرا</span>
+      <span>{{ course.mistake_count }} خطا</span>
+    </div>
+    <div class="course-footer">
+      <span>هدف: {{ course.target_grade if course.target_grade is not none else '—' }}</span>
+      <span>مشاهده ←</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">＋</div>
+  <h3>اولین درس را بساز</h3>
+  <p>بعد از ساخت درس، منابع استاد را اضافه کن و پروفایل اولیه را بگیر.</p>
+  <button class="button primary" data-modal-open="new-course">ساخت درس</button>
+</div>
+{% endif %}
+
+<div class="modal" id="new-course" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel">
+    <div class="modal-header"><div><h2>درس جدید</h2><p>اطلاعاتی که فعلاً داری کافی است.</p></div><button class="icon-button" data-modal-close>×</button></div>
+    <form method="post" action="/courses" class="form-grid">
+      <label class="field span-2"><span>نام درس *</span><input name="name" required placeholder="مثلاً احتمال ۲"></label>
+      <label class="field"><span>استاد</span><input name="professor" placeholder="نام استاد"></label>
+      <label class="field"><span>ترم</span><input name="term" placeholder="پاییز ۱۴۰۵"></label>
+      <label class="field"><span>تاریخ امتحان</span><input type="date" name="exam_date"></label>
+      <label class="field"><span>نمره هدف</span><input type="number" name="target_grade" min="0" max="20" step="0.25" placeholder="18"></label>
+      <label class="field"><span>زمان روزانه (دقیقه)</span><input type="number" name="daily_minutes" min="10" max="720" value="90"></label>
+      <label class="field span-2"><span>محدوده امتحان</span><textarea name="exam_scope" rows="3" placeholder="فصل‌ها، مباحث حذف‌شده و توضیحات استاد"></textarea></label>
+      <label class="field span-2"><span>یادداشت</span><textarea name="notes" rows="3" placeholder="سطح فعلی، ضعف‌ها و هر نکته مهم"></textarea></label>
+      <div class="form-actions span-2"><button type="button" class="button ghost" data-modal-close>انصراف</button><button class="button primary">ساخت فضای درس</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}
