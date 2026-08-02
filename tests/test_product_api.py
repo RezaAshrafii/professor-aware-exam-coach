@@ -134,3 +134,17 @@ def test_cors_allows_local_next_frontend(client):
     )
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_cors_health_preflight_matches_browser_request(client):
+    response = client.options(
+        "/health",
+        headers={
+            "Origin": "http://127.0.0.1:3000",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:3000"
+    assert "content-type" in response.headers["access-control-allow-headers"].lower()
