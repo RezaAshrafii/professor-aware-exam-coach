@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Exam Coach",
+  title: "Exam Coach — Professor-aware workspace",
   description: "Professor-aware university exam preparation workspace",
 };
 

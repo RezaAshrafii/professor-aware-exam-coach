@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.6.0] - 2026-08-03
+
+### Fixed
+
+- Replaced browser-to-FastAPI calls with a same-origin Next.js `/backend` proxy.
+- Removed unnecessary JSON `Content-Type` headers from bodyless requests.
+- Hardened direct local CORS for localhost and 127.0.0.1 origins.
+- Added an exact regression test for the failing `/health` preflight request.
+- Updated launchers to wait for both API and proxied frontend health before opening the browser.
+
+### Changed
+
+- Refined the UI into a denser minimal visual system without adding a component library.
+- Improved typography, spacing, cards, forms, sidebar, responsive layout and structured reports.
+- Updated application versions to 0.6.0.
+
+### Verification
+
+- 30 Python tests pass.
+- FastAPI live health and exact browser-style CORS preflight pass.
+- TypeScript syntax and frontend proxy contract checks pass.
+- Production Next.js build remains a GitHub/system gate because the artifact environment npm registry lacks `@types/node`.
+
 ## [0.5.0] - 2026-08-03
 
 ### Added

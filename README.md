@@ -1,73 +1,56 @@
-# Professor-Aware Exam Coach — v0.5.0
+# Professor-Aware Exam Coach — v0.6.0
 
-یک ابزار local-first برای آماده‌شدن قبل از امتحان، بر اساس منابع و مثال‌های واقعی همان استاد.
+ابزار local-first برای آماده‌شدن قبل از امتحان با تکیه بر منابع و مثال‌های واقعی همان استاد.
 
-## رابط جدید
+## اجرای سریع در ویندوز
 
-این نسخه یک UI مستقل با Next.js و TypeScript دارد. رابط قدیمی FastAPI همچنان به‌عنوان fallback باقی مانده است.
-
-### اجرای کامل در ویندوز
-
-روی این فایل دوبار کلیک کن:
+روی فایل زیر دوبار کلیک کن:
 
 ```text
 start_product_windows.bat
 ```
 
-بعد برنامه در این آدرس باز می‌شود:
+اسکریپت هر دو سرویس را بالا می‌آورد، آماده‌شدن API و UI را بررسی می‌کند و بعد مرورگر را باز می‌کند:
 
 ```text
 http://localhost:3000
 ```
 
-Backend در این آدرس است:
+در استفاده عادی، مرورگر از مسیر same-origin زیر به backend وصل می‌شود:
 
 ```text
-http://127.0.0.1:8000
+http://localhost:3000/backend/...
 ```
 
-### اجرای کامل در Linux/macOS
+به همین دلیل اتصال اصلی دیگر به CORS مرورگر وابسته نیست. API مستقیم نیز برای توسعه روی `http://127.0.0.1:8000` باقی مانده است.
 
-```bash
-./start_product_unix.sh
-```
+## تغییر اصلی v0.6.0
 
-## کارهایی که از UI انجام می‌شوند
+- رفع خطای `CORS preflight 405`؛
+- proxy داخلی Next.js برای API؛
+- حذف header غیرضروری `Content-Type` از درخواست‌های GET؛
+- launcher مطمئن‌تر که قبل از بازکردن مرورگر سلامت هر دو سرویس را چک می‌کند؛
+- بازطراحی سبک UI با خوانایی بهتر، کارت‌های کم‌حجم‌تر و workspace مینیمال‌تر؛
+- بدون کتابخانه UI یا وابستگی سنگین جدید.
+
+## امکانات فعلی
 
 - ساخت، ویرایش و حذف درس؛
-- دیدن آمار منابع، مثال‌ها، اجراها و خطاها؛
 - بارگذاری PDF، DOCX، TXT و Markdown؛
-- ثبت Example Card به‌صورت پیش‌نویس یا تأییدشده؛
-- تأیید/لغو تأیید و حذف مثال‌ها؛
-- اجرای مربی در حالت‌های grading، profile، plan و حالت‌های متنی؛
-- نمایش structured grading، پروفایل استاد و برنامه مطالعه؛
-- دیدن evidence هر پاسخ؛
-- تاریخچه اجراها؛
-- دفترچه خطا؛
-- تنظیمات هر درس.
+- ثبت و تأیید Example Card؛
+- اجرای grading، professor profile، study plan و حالت‌های متنی؛
+- نمایش structured output و evidence؛
+- تاریخچه اجرا و دفترچه خطا؛
+- UI فارسی RTL و responsive.
 
-## ساختار
-
-```text
-Next.js UI :3000
-      ↓ JSON API
-FastAPI :8000
-      ↓
-Services + SQLite + local uploads
-```
-
-جزئیات معماری در [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) است.
-
-## اجرای تست‌ها
-
-Backend و قراردادها:
+## تست‌ها
 
 ```bash
 pip install -r requirements-dev.txt
 python scripts/check_all.py
 ```
 
-Frontend پس از نصب وابستگی‌ها:
+Frontend در CI:
 
 ```bash
 cd web
@@ -76,15 +59,6 @@ npm run typecheck
 npm run build
 ```
 
-## GitHub
-
-مخزن شامل branch، commitهای واقعی، CI، PR template، issue template و tag نسخه است. راه‌اندازی در [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md) توضیح داده شده است.
-
-## محدودیت‌های این نسخه
-
-- Method Registry مستقل هنوز ساخته نشده است.
-- OCR و پردازش ویدئو داخل برنامه نیست.
-- retrieval هنوز lexical است.
-- npm registry در محیط ساخت این بسته در دسترس نبود؛ بنابراین `next build` اینجا اجرا نشد و باید در GitHub Actions یا سیستم تو تأیید شود. syntax فایل‌های TypeScript و تمام قراردادهای backend بررسی شده‌اند.
+در محیط ساخت این بسته، npm registry داخلی پکیج `@types/node` را ارائه نکرد؛ بنابراین production build در همین محیط اجرا نشد. syntax فایل‌های TypeScript، قرارداد proxy و تمام تست‌های backend اجرا شده‌اند. `next build` همچنان gate گیت‌هاب و سیستم تو است.
 
 راهنمای تست دستی: [USER_VERIFICATION.md](USER_VERIFICATION.md)

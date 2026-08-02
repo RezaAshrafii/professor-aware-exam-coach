@@ -11,11 +11,11 @@ import type {
   Workspace,
 } from "@/lib/types";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || "/backend";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
-  if (!(init?.body instanceof FormData)) {
+  if (init?.body !== undefined && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   const response = await fetch(`${API_URL}${path}`, {
