@@ -252,3 +252,70 @@ def list_retrieval_items(course_id: int) -> list[dict[str, Any]]:
     items.extend(list_chunks(course_id))
     return items
 
+
+
+def list_model_connections() -> list[dict[str, Any]]:
+    with get_connection() as db:
+        rows = db.execute("SELECT * FROM model_connections ORDER BY slot").fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_model_connection(slot: int) -> dict[str, Any] | None:
+    with get_connection() as db:
+        return _dict(db.execute("SELECT * FROM model_connections WHERE slot=?", (slot,)).fetchone())
+
+
+def get_active_model_connection() -> dict[str, Any] | None:
+    with get_connection() as db:
+        return _dict(db.execute("SELECT * FROM model_connections WHERE active=1 LIMIT 1").fetchone())
+
+
+def upsert_model_connection(
+    *,
+    slot: int,
+    label: str,
+    protocol: str,
+    base_url: str,
+    selected_model: str,
+    active: bool,
+) -> None:
+    with get_connection() as db:
+        if active:
+            db.execute("UPDATE model_connections SET active=0")
+        db.execute(
+            """INSERT INTO model_connections(slot, label, protocol, base_url, selected_model, active)
+               VALUES (?, ?, ?, ?, ?, ?)
+               ON CONFLICT(slot) DO UPDATE SET
+                   label=excluded.label,
+                   protocol=excluded.protocol,
+                   base_url=excluded.base_url,
+                   selected_model=excluded.selected_model,
+                   active=excluded.active,
+                   updated_at=CURRENT_TIMESTAMP""",
+            (slot, label, protocol, base_url, selected_model, int(active)),
+        )
+
+
+def update_model_selection(slot: int, selected_model: str, active: bool) -> None:
+    with get_connection() as db:
+        if active:
+            db.execute("UPDATE model_connections SET active=0")
+        db.execute(
+            "UPDATE model_connections SET selected_model=?, active=?, updated_at=CURRENT_TIMESTAMP WHERE slot=?",
+            (selected_model, int(active), slot),
+        )
+
+
+def cache_model_catalog(slot: int, models: list[dict[str, Any]]) -> None:
+    with get_connection() as db:
+        db.execute(
+            """UPDATE model_connections
+               SET cached_models_json=?, cache_updated_at=CURRENT_TIMESTAMP, updated_at=CURRENT_TIMESTAMP
+               WHERE slot=?""",
+            (json.dumps(models, ensure_ascii=False), slot),
+        )
+
+
+def delete_model_connection(slot: int) -> None:
+    with get_connection() as db:
+        db.execute("DELETE FROM model_connections WHERE slot=?", (slot,))

@@ -7,7 +7,6 @@ from typing import Any, Iterator, Literal
 
 from pydantic import BaseModel, ValidationError
 
-from app.config import settings
 from app.schemas import (
     EvidenceReference,
     GradingReport,
@@ -119,17 +118,21 @@ def validate_structured_response(
 
 
 class LLMService:
-    def __init__(self) -> None:
-        self.enabled = bool(settings.openai_api_key and settings.openai_model)
-        self.client: Any | None = None
-        if self.enabled:
-            try:
-                from openai import OpenAI
-            except ImportError as exc:
-                raise RuntimeError(
-                    "OPENAI_API_KEY and OPENAI_MODEL are set, but the openai package is not installed."
-                ) from exc
-            self.client = OpenAI(api_key=settings.openai_api_key)
+    def __init__(self, connection_service: Any | None = None) -> None:
+        if connection_service is None:
+            from app.services.model_connection_service import model_connections
+
+            connection_service = model_connections
+        self.connection_service = connection_service
+
+    @property
+    def enabled(self) -> bool:
+        return self.connection_service.get_active_runtime() is not None
+
+    @property
+    def active_provider(self) -> str | None:
+        runtime = self.connection_service.get_active_runtime()
+        return runtime.provider_name if runtime else None
 
     def generate(
         self,
@@ -139,11 +142,17 @@ class LLMService:
         evidence: list[dict[str, Any]] | None = None,
     ) -> LLMResult:
         evidence = evidence or []
-        if not self.enabled or self.client is None:
+        runtime = self.connection_service.get_active_runtime()
+        if runtime is None:
             return self._demo_result(input_text, response_model)
 
-        raw_text = self._request_model(instructions, input_text)
-        provider = f"openai:{settings.openai_model}"
+        raw_text = self.connection_service.generate(
+            runtime,
+            instructions,
+            input_text,
+            structured=response_model is not None,
+        )
+        provider = runtime.provider_name
         if response_model is None:
             return LLMResult(text=raw_text, provider=provider)
 
@@ -158,7 +167,12 @@ class LLMService:
             evidence=evidence,
         )
         try:
-            repaired_raw_text = self._request_model(instructions, repair_input)
+            repaired_raw_text = self.connection_service.generate(
+                runtime,
+                instructions,
+                repair_input,
+                structured=True,
+            )
         except Exception as exc:
             return replace(
                 first_result,
@@ -172,7 +186,6 @@ class LLMService:
             )
 
         repaired_result = self._validated_result(repaired_raw_text, provider, response_model, evidence)
-
         if repaired_result.structured_output is not None:
             return replace(
                 repaired_result,
@@ -181,32 +194,18 @@ class LLMService:
                 first_validation_error=first_result.validation_error,
             )
 
-        combined_error = (
-            "First attempt failed: "
-            f"{first_result.validation_error}\n"
-            "Repair attempt failed: "
-            f"{repaired_result.validation_error}"
-        )
         return replace(
             repaired_result,
-            validation_error=combined_error,
+            validation_error=(
+                "First attempt failed: "
+                f"{first_result.validation_error}\n"
+                "Repair attempt failed: "
+                f"{repaired_result.validation_error}"
+            ),
             validation_status="invalid_fallback",
             retry_count=1,
             first_validation_error=first_result.validation_error,
         )
-
-    def _request_model(self, instructions: str, input_text: str) -> str:
-        if self.client is None:
-            raise RuntimeError("Language model client is not initialized.")
-        response = self.client.responses.create(
-            model=settings.openai_model,
-            instructions=instructions,
-            input=input_text,
-        )
-        raw_text = response.output_text.strip()
-        if not raw_text:
-            raise RuntimeError("The language model returned an empty response.")
-        return raw_text
 
     @staticmethod
     def _repair_input(
@@ -297,7 +296,7 @@ class LLMService:
                     }
                 ],
                 unknowns=["نمونه پاسخ نمره‌گذاری‌شده موجود نیست."],
-                recommended_exam_strategy=["منابع رسمی درس و پاسخ‌های تصحیح‌شده را اضافه کن."],
+                recommended_exam_strategy=["یک اتصال مدل را از صفحه تنظیمات فعال کن."],
                 limitations=["این خروجی در حالت آزمایشی ساخته شده است."],
                 overall_confidence=0.1,
             )
@@ -311,7 +310,7 @@ class LLMService:
                         "criterion": "ارزیابی واقعی پاسخ",
                         "max_score": 20,
                         "awarded_score": 0,
-                        "rationale": "در حالت آزمایشی مدل زبانی متصل نیست و پاسخ علمی تصحیح نشده است.",
+                        "rationale": "اتصال مدل فعال نیست و پاسخ علمی تصحیح نشده است.",
                     }
                 ],
                 first_divergence=None,
@@ -332,20 +331,20 @@ class LLMService:
                 target_grade=None,
                 daily_minutes=90,
                 duration_days=1,
-                assumptions=["مدل زبانی متصل نیست و برنامه صرفاً برای تست قرارداد داده است."],
+                assumptions=["مدل فعال نیست و برنامه صرفاً برای تست قرارداد داده است."],
                 priorities=[],
                 days=[
                     {
                         "day_number": 1,
                         "calendar_date": None,
-                        "focus": "تکمیل منابع و فعال‌کردن مدل",
+                        "focus": "فعال‌کردن مدل",
                         "tasks": [
                             {
-                                "title": "منابع رسمی درس را بارگذاری کن.",
+                                "title": "از تنظیمات، یک اتصال مدل و مدل فعال انتخاب کن.",
                                 "task_type": "review",
                                 "estimated_minutes": 90,
                                 "exercise_count": None,
-                                "completion_criteria": "حداقل یک منبع قابل بازیابی در workspace وجود داشته باشد.",
+                                "completion_criteria": "وضعیت مدل در رابط کاربری فعال نمایش داده شود.",
                             }
                         ],
                         "short_test": None,
@@ -364,8 +363,7 @@ class LLMService:
         request = input_text.split("درخواست دانشجو:")[-1].strip()
         return (
             "## حالت آزمایشی\n\n"
-            "اتصال مدل هنوز فعال نیست، اما بازیابی منابع و ذخیره‌سازی درخواست درست انجام شد.\n\n"
+            "اتصال مدل فعال نیست، اما بازیابی منابع و ذخیره‌سازی درخواست درست انجام شد.\n\n"
             f"**درخواست ثبت‌شده:** {request[:1000]}\n\n"
-            "برای فعال‌شدن پاسخ هوشمند، `OPENAI_API_KEY` و `OPENAI_MODEL` را در فایل `.env` وارد کن. "
-            "تا آن زمان می‌توانی دوره، منابع، قطعه‌بندی، تاریخچه اجراها و دفترچه خطا را آزمایش کنی."
+            "از تنظیمات مدل، یک اتصال Gemini یا OpenAI-compatible بساز، مدل‌ها را دریافت کن و یکی را فعال کن."
         )
