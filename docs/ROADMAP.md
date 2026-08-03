@@ -1,33 +1,32 @@
 # Roadmap to v1.0
 
-## v0.5.0 — Product UI — completed
+## v0.7.0 — Model runtime — completed
 
-- Next.js + TypeScript frontend
-- dashboard and course workspace
-- product JSON API
-- responsive RTL interface
+- دو API slot عمومی؛
+- Gemini و OpenAI-compatible؛
+- discovery پویای مدل؛
+- انتخاب مدل فعال؛
+- grading واقعی به‌جای demo؛
+- startup بدون نصب تکراری.
 
-## v0.6.0 — Method Cards
+## v0.8.0 — Fast coach workflow
 
-Example Cardهای تأییدشده به روش‌های ساده و قابل ویرایش متصل می‌شوند:
+- ورودی جدا برای صورت سؤال، پاسخ و بارم؛
+- paste سریع و template آماده؛
+- Method Card ساده؛
+- هشدار روش خارج از منابع؛
+- preview قطعه منبع.
 
-- روش استاد
-- شرط استفاده
-- مراحل اجباری
-- نمادگذاری
-- مثال‌های پشتیبان
+## v0.9.0 — Reliability finish
 
-## v0.7.0 — Allowed Method Enforcement
-
-پاسخ نهایی ابتدا باید یک Method Card تأییدشده انتخاب کند. روش خارج از منابع با هشدار مشخص می‌شود.
-
-## v0.8.0 — Reliability finish
-
-- export/import workspace
-- source/chunk preview
-- regression evidence pack
-- رفع باگ‌های استفاده واقعی
+- export/import workspace؛
+- prompt regression pack؛
+- خطاهای provider و rate limit UX؛
+- polish بر اساس استفاده واقعی.
 
 ## v1.0.0 — Stable personal release
 
-نسخه برای استفاده ترم بعد پایدار می‌شود. قابلیت جدید بزرگ پس از این نقطه فقط بر اساس نیاز واقعی اضافه خواهد شد.
+- استفاده موفق روی چند درس واقعی؛
+- CI کامل سبز؛
+- setup/update روشن؛
+- قرارداد داده پایدار.

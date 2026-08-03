@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.7.0] - 2026-08-03
+
+### Added
+
+- Two generic local model-connection slots.
+- Native Gemini REST discovery and generation.
+- OpenAI-compatible model discovery with Chat Completions and Responses API fallback.
+- Searchable model picker that renders at most eight results at once.
+- Local secret store excluded from Git.
+- Connection test endpoint and active provider status.
+- Smart dependency bootstrap and fast Windows launcher.
+
+### Changed
+
+- LLM runtime now resolves the active connection dynamically for every run.
+- Removed the hard dependency on the OpenAI Python SDK.
+- Demo grading is automatically replaced once an active connection and model exist.
+- Frontend version updated to 0.7.0.
+
+### Verification
+
+- 38 Python tests pass.
+- Gemini discovery, secret masking, dynamic selection and real grading path are covered with mock provider responses.
+- OpenAI-compatible dynamic model discovery is covered.
+- TypeScript syntax and model-picker contract checks pass.
+
 ## [0.6.0] - 2026-08-03
 
 ### Fixed
