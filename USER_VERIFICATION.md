@@ -1,73 +1,14 @@
-# User Verification — v0.7.0
+# User Verification — v0.7.1
 
-## ۱. نصب فقط یک‌بار — الزامی
+## Required manual test
 
-1. همه پنجره‌های نسخه قبلی را ببند.
-2. `start_product_windows.bat` را اجرا کن.
-3. بعد از بالا آمدن برنامه، پنجره‌ها را ببند و همان فایل را دوباره اجرا کن.
+1. Keep the v0.7.1 ZIP in Downloads.
+2. In the permanent project folder, double-click `update_from_zip.bat`.
+3. Confirm the updater reports that `.git`, `data`, API keys, `.venv`, and `node_modules` were preserved.
+4. Confirm ACOS opens at `http://localhost:3000`.
+5. Confirm the existing course, uploaded PDF, and saved model connection are still present.
+6. Run the same differential-equations grading request once.
 
-در اجرای دوم باید پیام‌های زیر را ببینی:
+## Pass gate
 
-```text
-[fast] Python dependencies are already ready.
-[fast] Frontend dependencies are already ready.
-```
-
-نباید pip upgrade یا npm install دوباره اجرا شود.
-
-## ۲. اتصال Gemini — الزامی
-
-1. از داشبورد روی «مدل و API» بزن.
-2. در اتصال ۱، نوع API را `Gemini API` بگذار.
-3. API key را وارد کن.
-4. روی «دریافت مدل‌ها» بزن.
-5. در کادر جست‌وجو عبارت `flash` را بنویس.
-6. مدل دلخواهت را انتخاب کن، اتصال را فعال کن و «ذخیره» را بزن.
-7. «تست مدل» را اجرا کن.
-
-نتیجه درست:
-
-- مدل‌ها از API بالا بیایند؛
-- لیست بلند و بازشده نمایش داده نشود؛ فقط حداکثر ۸ نتیجه دیده شود؛
-- پیام «اتصال سالم است» نمایش داده شود؛
-- بالای صفحه نام اتصال و مدل فعال دیده شود؛
-- API key پس از refresh دوباره در input نمایش داده نشود.
-
-## ۳. تصحیح واقعی — الزامی
-
-در یک درس با منبع بارگذاری‌شده، حالت «تصحیح سخت‌گیرانه» را اجرا کن.
-
-ورودی نمونه:
-
-```text
-صورت سؤال: معادله y'=x+y را حل کنید.
-پاسخ من: معادله را جدا کرده و انتگرال می‌گیریم.
-بارم: 20
-```
-
-نتیجه درست:
-
-- provider دیگر `demo` نباشد؛
-- گزارش صفر آزمایشی ثابت نمایش داده نشود؛
-- جدول نمره، خطای انتخاب روش و پاسخ اصلاحی از مدل واقعی بیاید؛
-- نام مدل استفاده‌شده در history ذخیره شود.
-
-## ۴. اتصال دوم — اختیاری
-
-برای OpenRouter یا سرویس سازگار، اتصال ۲ را روی `OpenAI-compatible` بگذار و Base URL همان سرویس را وارد کن. پس از دریافت مدل‌ها، فقط یک اتصال را active نگه دار.
-
-## تست دستی لازم نیست
-
-این موارد خودکار تست شده‌اند:
-
-- مخفی‌ماندن API key در پاسخ API؛
-- محدودبودن slotها به ۱ و ۲؛
-- فیلترشدن مدل‌های Gemini فاقد `generateContent`؛
-- discovery پویای مدل‌های OpenAI-compatible؛
-- عبور grading واقعی از runtime فعال؛
-- validation و repair خروجی structured؛
-- عدم نصب تکراری بر اساس dependency hash.
-
-## Gate نسخه بعد
-
-تا وقتی اتصال واقعی، انتخاب مدل و یک grading غیر-demo روی سیستم تو پاس نشده، قابلیت جدید بعدی اضافه نشود.
+The version passes only if no Python or npm reinstall occurs when dependency files are unchanged, existing data remains available, and the selected real model produces a non-demo response.

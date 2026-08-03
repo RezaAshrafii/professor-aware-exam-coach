@@ -63,3 +63,13 @@ node scripts/check_frontend_syntax.mjs
 CI علاوه بر این‌ها type-check و production build فرانت را اجرا می‌کند.
 
 راهنمای تست دستی: [USER_VERIFICATION.md](USER_VERIFICATION.md)
+
+## One-click updates on Windows
+
+After the first installation, keep one permanent project folder. For every later version:
+
+1. download the new ZIP and leave it in Downloads;
+2. close the running API and Web windows;
+3. double-click `update_from_zip.bat` in the project folder.
+
+The updater preserves Git history, course data, API keys, `.venv`, and `web/node_modules`, then starts the application. See `docs/UPDATE_FROM_ZIP.md`.
