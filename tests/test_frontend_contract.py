@@ -37,3 +37,5 @@ def test_smart_launcher_does_not_upgrade_pip_on_every_start():
     assert "pip install --upgrade pip" not in launcher
     assert "python.sha256" in bootstrap
     assert "node.sha256" in bootstrap
+    assert "Existing Python environment already satisfies" in bootstrap
+    assert "Existing frontend dependencies already satisfy" in bootstrap
