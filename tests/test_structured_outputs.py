@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
-
 import pytest
 from pydantic import ValidationError
 
-from app.config import settings
 from app.schemas import GradingReport, ProfessorProfile, StudyPlan, structured_model_for_mode
 from app.services.llm_service import (
     EvidenceValidationError,
@@ -49,22 +46,24 @@ def evidence_pack() -> list[dict]:
     return [{"filename": "notes.txt", "chunk_index": 0, "content": "Assumptions are stated explicitly."}]
 
 
-class FakeResponses:
+class FakeRuntime:
+    provider_name = "fake:test-model"
+
+
+class FakeConnectionService:
     def __init__(self, outputs: list[str | Exception]):
         self.outputs = iter(outputs)
         self.call_count = 0
 
-    def create(self, **_: object) -> SimpleNamespace:
+    def get_active_runtime(self):
+        return FakeRuntime()
+
+    def generate(self, runtime, instructions, input_text, *, structured):
         self.call_count += 1
         output = next(self.outputs)
         if isinstance(output, Exception):
             raise output
-        return SimpleNamespace(output_text=output)
-
-
-class FakeClient:
-    def __init__(self, outputs: list[str | Exception]):
-        self.responses = FakeResponses(outputs)
+        return output
 
 
 def test_structured_mode_mapping_is_explicit():
@@ -185,14 +184,11 @@ def test_invalid_structured_response_falls_back_to_raw_text():
     assert result.validation_status == "invalid_fallback"
 
 
-def test_invalid_first_response_is_repaired_once(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(settings, "openai_model", "test-model")
+def test_invalid_first_response_is_repaired_once():
     invalid = json.dumps(profile_payload(source_number=7))
     repaired = json.dumps(profile_payload(source_number=1))
-
-    service = LLMService()
-    service.enabled = True
-    service.client = FakeClient([invalid, repaired])
+    connection = FakeConnectionService([invalid, repaired])
+    service = LLMService(connection)
 
     result = service.generate(
         "Return ProfessorProfile JSON.",
@@ -205,14 +201,12 @@ def test_invalid_first_response_is_repaired_once(monkeypatch: pytest.MonkeyPatch
     assert result.retry_count == 1
     assert result.structured_output is not None
     assert result.first_validation_error and "source_number=7" in result.first_validation_error
-    assert service.client.responses.call_count == 2
+    assert connection.call_count == 2
 
 
-def test_failed_repair_remains_explicit_invalid_fallback(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(settings, "openai_model", "test-model")
-    service = LLMService()
-    service.enabled = True
-    service.client = FakeClient(["not json", "still not json"])
+def test_failed_repair_remains_explicit_invalid_fallback():
+    connection = FakeConnectionService(["not json", "still not json"])
+    service = LLMService(connection)
 
     result = service.generate(
         "Return ProfessorProfile JSON.",
@@ -226,16 +220,12 @@ def test_failed_repair_remains_explicit_invalid_fallback(monkeypatch: pytest.Mon
     assert result.retry_count == 1
     assert "First attempt failed" in (result.validation_error or "")
     assert "Repair attempt failed" in (result.validation_error or "")
-    assert service.client.responses.call_count == 2
+    assert connection.call_count == 2
 
 
-
-
-def test_failed_repair_request_returns_first_raw_response(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(settings, "openai_model", "test-model")
-    service = LLMService()
-    service.enabled = True
-    service.client = FakeClient(["not json", RuntimeError("temporary provider error")])
+def test_failed_repair_request_returns_first_raw_response():
+    connection = FakeConnectionService(["not json", RuntimeError("temporary provider error")])
+    service = LLMService(connection)
 
     result = service.generate(
         "Return ProfessorProfile JSON.",
