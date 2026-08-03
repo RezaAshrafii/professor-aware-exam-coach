@@ -1,149 +1,82 @@
 # Development Guide
 
-## 1. Product scope
+## Product scope
 
-Professor-Aware Exam Coach یک ابزار شخصی و local-first برای آمادگی امتحان‌های کمی است. پروژه عمداً کوچک نگه داشته می‌شود.
+Professor-Aware Exam Coach یک modular monolith و ابزار شخصی local-first است. هدف فعلی رسیدن سریع به یک محصول قابل استفاده است، نه ساخت زیرساخت پژوهشی یا سازمانی سنگین.
 
-هدف:
-
-1. ثبت شواهد واقعی تدریس استاد؛
-2. استفاده از روش‌های تدریس‌شده در پاسخ؛
-3. تصحیح سخت‌گیرانه و شفاف؛
-4. آماده‌کردن دانشجو برای حل مستقل.
-
-## 2. Non-goals
-
-در مسیر فعلی این موارد پیاده نمی‌شوند مگر نیاز واقعی ثابت شود:
-
-- microservice؛
-- Kubernetes یا queue؛
-- vector database مستقل؛
-- multi-agent runtime؛
-- fine-tuning؛
-- شبکه اجتماعی یا چندکاربره؛
-- analytics پژوهشی سنگین؛
-- frontend framework جدید صرفاً برای نمایش تکنولوژی؛
-- پردازش کامل ویدئو یا OCR پیچیده.
-
-## 3. Current architecture
+## Architecture
 
 ```text
-Next.js product UI + Jinja fallback
-                ↓
-        FastAPI JSON/form API
-                ↓
-Services: retrieval / prompt / LLM validation
-                ↓
-          Repositories
-                ↓
-        SQLite + local files
+Next.js UI
+   ↓ same-origin /backend proxy
+FastAPI API
+   ↓
+ExamCoach / ModelConnection / Retrieval services
+   ↓
+Repositories
+   ↓
+SQLite + local uploads + local API-key file
 ```
 
-این modular monolith برای ابزار تک‌کاربره کافی است.
+## Current boundaries
 
-## 4. Code boundaries
+- `api_routes.py`: JSON product API
+- `schemas.py`: request/structured-output contracts
+- `repositories.py`: SQL only
+- `model_connection_service.py`: provider discovery, generation and local secrets
+- `llm_service.py`: structured validation and one repair attempt
+- `exam_coach_service.py`: retrieval → prompt → model → persistence
+- `web/`: Next.js UI
 
-- `main.py`: برنامه FastAPI و routeهای UI fallback
-- `api_routes.py`: قرارداد JSON مورد استفاده Next.js
-- `schemas.py`: قرارداد داده
-- `repositories.py`: تمام SQL
-- `services/retrieval_service.py`: ranking خالص
-- `services/prompt_service.py`: policy و prompt
-- `services/llm_service.py`: provider، parsing، validation و repair
-- `services/exam_coach_service.py`: هماهنگ‌کننده use case
-- `templates/static`: UI قدیمی و fallback
-- `web/`: رابط محصول Next.js و TypeScript
+## Model runtime rules
 
-## 5. Data model
+1. At most two saved connections.
+2. Exactly zero or one active connection.
+3. No model IDs hardcoded in product code.
+4. API keys never returned to the browser after save.
+5. Provider errors remain explicit; the app must not silently fall back to demo after a configured request fails.
+6. Structured responses remain schema- and evidence-validated regardless of provider.
 
-- `courses`: workspace درس
-- `sources`: فایل اصلی
-- `chunks`: قطعه‌های متنی
-- `runs`: تاریخچه اجرا
-- `mistakes`: دفترچه خطا
-- `example_cards`: سؤال و راه‌حل ثبت‌شده استاد
+## Startup rules
 
-قانون ثابت از v0.4.0: فقط Example Card با وضعیت `confirmed` می‌تواند وارد retrieval شود.
+- `scripts/bootstrap.py` creates `.venv` once.
+- Python dependencies reinstall only when `requirements.txt` changes.
+- Node dependencies reinstall only when dependency/lock data changes.
+- Local startup never upgrades pip automatically.
+- `start_fast_windows.bat` performs no installation.
 
-## 6. Git workflow
+## Non-goals
 
-- `main` فقط نسخه سالم
-- branch کوتاه برای هر تغییر
-- Conventional Commits
-- PR حتی برای توسعه شخصی
-- merge فقط پس از CI و تست دستی لازم
+- microservices, queues, Docker orchestration;
+- vector DB before measured retrieval failure;
+- multi-agent runtime;
+- fine-tuning before labeled data;
+- provider-specific UI pages;
+- maintaining a manual model catalog.
 
-جزئیات: `docs/GIT_WORKFLOW.md`
+## Definition of done
 
-## 7. Definition of done
+A change is done only when tests cover its main success and failure path, user verification is explicit, private data remains outside Git, and startup does not regress.
 
-یک قابلیت تمام‌شده است اگر:
+## Short roadmap
 
-- مسئله مشخصی را حل کند؛
-- schema و persistence روشن داشته باشد؛
-- تست خودکار مسیر اصلی و failure مهم را پوشش دهد؛
-- تست دستی لازم نوشته شده باشد؛
-- README و CHANGELOG به‌روز باشند؛
-- داده شخصی وارد Git نشود.
+### v0.7.0 — completed
 
-## 8. Short roadmap
-
-### v0.4.0 — completed
-
-- GitHub repository foundation
-- Example Card
-- draft/confirmed evidence gate
-
-### v0.5.0 — completed
-
-- Next.js product UI
-- JSON API for all current workflows
-- responsive Persian RTL workspace
-- frontend type-check/build CI gate
-- legacy UI retained as fallback
-
-### v0.6.0
-
-Method Card ساده:
-
-- نام روش
-- شرایط استفاده
-- مراحل اجباری
-- نمادگذاری استاد
-- اتصال به Example Cardهای تأییدشده
-- وضعیت draft/confirmed
-
-### v0.7.0
-
-Allowed Method Enforcement:
-
-- انتخاب روش تأییدشده پیش از پاسخ
-- هشدار روش خارج از منابع
-- grading سخت‌گیرانه بر اساس مراحل روش
+- generic two-slot model runtime;
+- Gemini and OpenAI-compatible APIs;
+- dynamic model discovery;
+- real grading activation;
+- dependency-aware startup.
 
 ### v0.8.0
 
-پایدارسازی:
-
-- export/import workspace
-- source/chunk preview
-- prompt regression fixtures
-- رفع باگ‌های استفاده واقعی
+- simplify coach input into separate question/answer/score fields;
+- Method Card MVP and allowed-method warning;
+- source chunk preview.
 
 ### v1.0.0
 
-- قرارداد داده پایدار
-- نصب و اجرای روشن
-- تست‌های backend و frontend سبز
-- استفاده موفق روی چند درس واقعی
-- مستندات کامل
-
-## 9. Stop conditions against over-engineering
-
-قابلیت جدید اضافه نشود اگر:
-
-- با یک فرم یا query ساده حل می‌شود ولی برایش framework جدید پیشنهاد شده؛
-- دو مصرف واقعی برای abstraction وجود ندارد؛
-- metric یا failure واقعی برای ارتقای retrieval نداریم؛
-- فقط ارزش ظاهری رزومه دارد؛
-- زمان رسیدن به ابزار قابل استفاده را عقب می‌اندازد.
+- stable daily-use workflow on several real courses;
+- export/import workspace;
+- full backend/frontend CI green;
+- polished documentation and release package.

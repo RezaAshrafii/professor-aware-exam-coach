@@ -94,6 +94,23 @@ CREATE TABLE IF NOT EXISTS example_cards (
 
 CREATE INDEX IF NOT EXISTS idx_example_cards_course ON example_cards(course_id);
 CREATE INDEX IF NOT EXISTS idx_example_cards_status ON example_cards(course_id, status);
+
+
+CREATE TABLE IF NOT EXISTS model_connections (
+    slot INTEGER PRIMARY KEY CHECK(slot IN (1, 2)),
+    label TEXT NOT NULL,
+    protocol TEXT NOT NULL CHECK(protocol IN ('gemini', 'openai_compatible')),
+    base_url TEXT NOT NULL,
+    selected_model TEXT NOT NULL DEFAULT '',
+    active INTEGER NOT NULL DEFAULT 0 CHECK(active IN (0, 1)),
+    cached_models_json TEXT NOT NULL DEFAULT '[]',
+    cache_updated_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_model_connections_single_active
+ON model_connections(active) WHERE active = 1;
 """
 
 

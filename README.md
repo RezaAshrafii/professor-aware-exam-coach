@@ -1,64 +1,65 @@
-# Professor-Aware Exam Coach — v0.6.0
+# Professor-Aware Exam Coach — v0.7.0
 
-ابزار local-first برای آماده‌شدن قبل از امتحان با تکیه بر منابع و مثال‌های واقعی همان استاد.
+ابزار local-first برای تمرین و تصحیح پاسخ‌های دانشگاهی بر اساس منابع همان درس.
 
 ## اجرای سریع در ویندوز
 
-روی فایل زیر دوبار کلیک کن:
+روی این فایل دوبار کلیک کن:
 
 ```text
 start_product_windows.bat
 ```
 
-اسکریپت هر دو سرویس را بالا می‌آورد، آماده‌شدن API و UI را بررسی می‌کند و بعد مرورگر را باز می‌کند:
+در اجرای اول محیط Python و وابستگی‌های frontend نصب می‌شوند. اجراهای بعدی فقط hash وابستگی‌ها را چک می‌کنند و اگر تغییری نکرده باشد هیچ نصب یا ارتقای pip انجام نمی‌شود.
+
+برای اجرای کاملاً سریع بعد از نصب اولیه:
+
+```text
+start_fast_windows.bat
+```
+
+رابط اصلی:
 
 ```text
 http://localhost:3000
 ```
 
-در استفاده عادی، مرورگر از مسیر same-origin زیر به backend وصل می‌شود:
+## مدل و API
+
+از داشبورد روی «مدل و API» بزن یا برو به:
 
 ```text
-http://localhost:3000/backend/...
+http://localhost:3000/settings
 ```
 
-به همین دلیل اتصال اصلی دیگر به CORS مرورگر وابسته نیست. API مستقیم نیز برای توسعه روی `http://127.0.0.1:8000` باقی مانده است.
+دو slot عمومی داری. هر slot می‌تواند یکی از این دو قرارداد را استفاده کند:
 
-## تغییر اصلی v0.6.0
+- Gemini API
+- OpenAI-compatible API
 
-- رفع خطای `CORS preflight 405`؛
-- proxy داخلی Next.js برای API؛
-- حذف header غیرضروری `Content-Type` از درخواست‌های GET؛
-- launcher مطمئن‌تر که قبل از بازکردن مرورگر سلامت هر دو سرویس را چک می‌کند؛
-- بازطراحی سبک UI با خوانایی بهتر، کارت‌های کم‌حجم‌تر و workspace مینیمال‌تر؛
-- بدون کتابخانه UI یا وابستگی سنگین جدید.
+Base URL و API key را وارد می‌کنی، برنامه فهرست مدل‌ها را مستقیم از همان API می‌گیرد، سپس با جست‌وجوی کوتاه مدل را انتخاب می‌کنی. هیچ مدل مشخصی در UI هاردکد نشده است.
 
-## امکانات فعلی
+کلیدها فقط داخل `data/model_secrets.json` روی سیستم محلی ذخیره می‌شوند، در پاسخ API نمایش داده نمی‌شوند و توسط `.gitignore` وارد Git نمی‌شوند.
 
-- ساخت، ویرایش و حذف درس؛
-- بارگذاری PDF، DOCX، TXT و Markdown؛
-- ثبت و تأیید Example Card؛
-- اجرای grading، professor profile، study plan و حالت‌های متنی؛
-- نمایش structured output و evidence؛
-- تاریخچه اجرا و دفترچه خطا؛
-- UI فارسی RTL و responsive.
+## تغییرات اصلی v0.7.0
+
+- اتصال واقعی Gemini API؛
+- اتصال عمومی OpenAI-compatible برای OpenAI، OpenRouter و سرویس‌های سازگار؛
+- discovery پویای مدل‌ها از endpoint خود سرویس؛
+- دو API slot با یک UI مشترک و searchable model picker؛
+- انتخاب یک مدل فعال برای تمام درس‌ها؛
+- تست اتصال و نمایش provider/model واقعی در خروجی؛
+- حذف وابستگی مستقیم به پکیج OpenAI؛
+- startup هوشمند بدون نصب تکراری وابستگی‌ها؛
+- `start_fast_windows.bat` برای اجرای فوری بعد از setup اولیه.
 
 ## تست‌ها
 
 ```bash
-pip install -r requirements-dev.txt
-python scripts/check_all.py
+python -m pytest
+node scripts/check_frontend_syntax.mjs
 ```
 
-Frontend در CI:
-
-```bash
-cd web
-npm install
-npm run typecheck
-npm run build
-```
-
-در محیط ساخت این بسته، npm registry داخلی پکیج `@types/node` را ارائه نکرد؛ بنابراین production build در همین محیط اجرا نشد. syntax فایل‌های TypeScript، قرارداد proxy و تمام تست‌های backend اجرا شده‌اند. `next build` همچنان gate گیت‌هاب و سیستم تو است.
+CI علاوه بر این‌ها type-check و production build فرانت را اجرا می‌کند.
 
 راهنمای تست دستی: [USER_VERIFICATION.md](USER_VERIFICATION.md)

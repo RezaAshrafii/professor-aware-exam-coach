@@ -17,8 +17,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     from app.config import settings
     settings.database_path = str(database_path)
     settings.upload_dir = str(upload_path)
-    settings.openai_api_key = ""
-    settings.openai_model = ""
+    settings.model_secrets_path = str(tmp_path / "model_secrets.json")
 
     from app.database import init_db
     init_db()

@@ -48,6 +48,20 @@ class ExampleCardStatusUpdate(BaseModel):
     status: Literal["draft", "confirmed"]
 
 
+class ModelConnectionUpsert(BaseModel):
+    label: str = Field(min_length=1, max_length=80)
+    protocol: Literal["gemini", "openai_compatible"]
+    base_url: str = Field(default="", max_length=500)
+    api_key: str | None = Field(default=None, max_length=2000)
+    selected_model: str = Field(default="", max_length=300)
+    active: bool = False
+
+
+class ModelSelectionUpdate(BaseModel):
+    selected_model: str = Field(min_length=1, max_length=300)
+    active: bool = True
+
+
 class EvidenceReference(BaseModel):
     """Reference to one retrieved chunk shown to the model in the current run."""
 

@@ -9,9 +9,16 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app import repositories
 from app.config import settings
-from app.schemas import CourseCreate, ExampleCardCreate, ExampleCardStatusUpdate, MistakeCreate
+from app.schemas import (
+    CourseCreate,
+    ExampleCardCreate,
+    ExampleCardStatusUpdate,
+    MistakeCreate,
+    ModelConnectionUpsert,
+)
 from app.services.document_service import DocumentError, SUPPORTED_EXTENSIONS, chunk_text, extract_text
 from app.services.exam_coach_service import ExamCoachService
+from app.services.model_connection_service import model_connections
 
 router = APIRouter(prefix="/api", tags=["product-api"])
 coach = ExamCoachService()
@@ -93,6 +100,7 @@ def get_course_workspace_api(course_id: int) -> dict[str, Any]:
         "runs": repositories.list_runs(course_id, limit=50),
         "mistakes": repositories.list_mistakes(course_id),
         "model_enabled": coach.llm.enabled,
+        "active_provider": coach.llm.active_provider,
     }
 
 
@@ -172,3 +180,49 @@ def delete_mistake_api(course_id: int, mistake_id: int) -> None:
     if not mistake or int(mistake["course_id"]) != course_id:
         raise HTTPException(status_code=404, detail="Mistake not found")
     repositories.delete_mistake(mistake_id)
+
+
+@router.get("/model-connections")
+def list_model_connections_api() -> dict[str, Any]:
+    return {
+        "items": model_connections.list_public(),
+        "active_provider": coach.llm.active_provider,
+    }
+
+
+@router.put("/model-connections/{slot}")
+def save_model_connection_api(slot: int, payload: ModelConnectionUpsert) -> dict[str, Any]:
+    try:
+        connection = model_connections.save(slot, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"connection": connection, "active_provider": coach.llm.active_provider}
+
+
+@router.post("/model-connections/{slot}/discover")
+def discover_models_api(slot: int) -> dict[str, Any]:
+    try:
+        models = model_connections.discover_models(slot)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Model discovery failed: {exc}") from exc
+    return {"items": models, "count": len(models)}
+
+
+@router.post("/model-connections/{slot}/test")
+def test_model_connection_api(slot: int) -> dict[str, Any]:
+    try:
+        return model_connections.test_connection(slot)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Connection test failed: {exc}") from exc
+
+
+@router.delete("/model-connections/{slot}", status_code=204)
+def delete_model_connection_api(slot: int) -> None:
+    try:
+        model_connections.delete(slot)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

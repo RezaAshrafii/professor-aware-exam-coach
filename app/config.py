@@ -11,13 +11,12 @@ class Settings(BaseSettings):
     app_secret: str = "change-me"
     database_path: str = "data/exam_coach.db"
     upload_dir: str = "data/uploads"
-    openai_api_key: str = ""
-    openai_model: str = ""
+    model_secrets_path: str = "data/model_secrets.json"
     max_context_chunks: int = 8
     max_upload_mb: int = 20
     web_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
     def database_file(self) -> Path:
@@ -26,6 +25,10 @@ class Settings(BaseSettings):
     @property
     def upload_path(self) -> Path:
         return Path(self.upload_dir)
+
+    @property
+    def model_secrets_file(self) -> Path:
+        return Path(self.model_secrets_path)
 
     @property
     def web_origin_list(self) -> list[str]:

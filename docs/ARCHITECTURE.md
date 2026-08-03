@@ -1,52 +1,35 @@
-# Architecture — v0.5.0
+# Architecture — v0.7.0
 
-پروژه همچنان یک modular monolith است؛ فقط رابط محصول از backend جدا شده است.
+پروژه یک modular monolith تک‌کاربره است.
 
 ```text
 Browser
+  ↓ same-origin /backend
+Next.js App Router + TypeScript
   ↓
-Next.js App Router + TypeScript       web/
-  ↓ HTTP JSON / multipart
-FastAPI product API                  app/api_routes.py
+FastAPI product API
   ↓
-Existing services                    app/services/
+ExamCoachService ─ ModelConnectionService ─ RetrievalService
   ↓
-Repositories                         app/repositories.py
+Repositories
   ↓
-SQLite + local uploads
+SQLite + uploads + local secret file
 ```
+
+## مرزها
+
+- `web/lib/api.ts`: تنها client ارتباط frontend؛
+- `app/api_routes.py`: API محصول؛
+- `app/services/model_connection_service.py`: discovery و اجرای provider؛
+- `app/services/llm_service.py`: validation و repair مستقل از provider؛
+- `app/repositories.py`: SQL؛
+- `data/model_secrets.json`: کلیدهای local-only و خارج از Git.
 
 ## تصمیم‌های عمدی
 
-- backend فعلی بازنویسی نشده است؛
-- UI قدیمی Jinja فعلاً حذف نشده و fallback است؛
-- state manager سراسری، Redux، WebSocket و microservice نداریم؛
-- frontend مستقیماً قرارداد JSON ساده FastAPI را مصرف می‌کند؛
-- داده حساس و فایل‌ها local-first باقی می‌مانند؛
-- تغییرات UI نباید retrieval یا validation را تغییر دهند.
-
-## مرز فایل‌ها
-
-- `app/api_routes.py`: API مورد استفاده Next.js؛
-- `app/main.py`: برنامه FastAPI و UI fallback؛
-- `web/lib/api.ts`: تنها مسیر ارتباط frontend با backend؛
-- `web/lib/types.ts`: قراردادهای TypeScript؛
-- `web/components/dashboard.tsx`: ساخت و فهرست درس‌ها؛
-- `web/components/course-workspace.tsx`: workspace و عملیات اصلی؛
-- `web/components/structured-output.tsx`: نمایش خروجی‌های schema‌دار؛
-- `web/app/globals.css`: design system سبک بدون کتابخانه UI خارجی.
-
-## چیزی که عمداً نداریم
-
-- SSR پیچیده یا Server Actions برای mutationها؛
-- احراز هویت؛
-- cloud database؛
-- queue؛
-- چند frontend package؛
-- Tailwind/shadcn dependency؛
-- abstraction عمومی قبل از نیاز واقعی.
-
-
-## Frontend connectivity (v0.6.0)
-
-The browser calls `/backend/*` on the Next.js origin. Next rewrites that path to the local FastAPI service. This keeps the runtime simple while avoiding browser CORS as a normal dependency. FastAPI CORS remains enabled only for direct local development access.
+- دو connection slot، نه سیستم provider plugin پیچیده؛
+- مدل‌ها از API کشف می‌شوند، نه catalog هاردکد؛
+- Gemini native REST و OpenAI-compatible با fallback محدود؛
+- no Redux, no component library, no microservice؛
+- browser از proxy داخلی Next استفاده می‌کند؛
+- UI قدیمی Jinja هنوز fallback است.
