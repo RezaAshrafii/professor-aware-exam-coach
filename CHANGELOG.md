@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.1 — 2026-08-03
+
+- Added `update_from_zip.bat` for one-click Windows updates from the newest release ZIP.
+- Preserves Git history, course data, API keys, Python environment, and frontend dependencies.
+- Refuses to overwrite tracked local changes and automatically starts the application after updating.
+- Added regression tests for updater safety guarantees.
+
 ## [0.7.0] - 2026-08-03
 
 ### Added

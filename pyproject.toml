@@ -1,6 +1,6 @@
 [project]
 name = "professor-aware-exam-coach"
-version = "0.7.0"
+version = "0.7.1"
 description = "Local-first professor-aware university exam preparation coach"
 requires-python = ">=3.11"
 
