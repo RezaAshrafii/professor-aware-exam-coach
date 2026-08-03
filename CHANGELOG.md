@@ -10,7 +10,7 @@
 - Searchable model picker that renders at most eight results at once.
 - Local secret store excluded from Git.
 - Connection test endpoint and active provider status.
-- Smart dependency bootstrap and fast Windows launcher.
+- Smart dependency bootstrap that adopts an existing valid environment without reinstalling, plus a fast Windows launcher.
 
 ### Changed
 

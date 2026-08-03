@@ -20,4 +20,4 @@ Then run:
 .\start_product_windows.bat
 ```
 
-The dependency bootstrap may run once because backend requirements changed. Future launches skip installation unless dependency files change again.
+If your existing `.venv` and `web/node_modules` already satisfy the dependency files, bootstrap adopts them and does not reinstall. Future launches also skip installation unless dependency files change.
