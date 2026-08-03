@@ -49,20 +49,65 @@ def run(command: list[str], *, cwd: Path = ROOT) -> None:
     subprocess.run(command, cwd=cwd, check=True)
 
 
+def python_dependencies_satisfied(requirements: Path) -> bool:
+    checker = r"""
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+from packaging.requirements import Requirement
+import sys
+
+for raw in Path(sys.argv[1]).read_text(encoding='utf-8').splitlines():
+    line = raw.strip()
+    if not line or line.startswith('#') or line.startswith('-r '):
+        continue
+    requirement = Requirement(line)
+    if requirement.marker and not requirement.marker.evaluate():
+        continue
+    try:
+        installed = version(requirement.name)
+    except PackageNotFoundError:
+        raise SystemExit(1)
+    if requirement.specifier and installed not in requirement.specifier:
+        raise SystemExit(1)
+"""
+    result = subprocess.run(
+        [str(VENV_PYTHON), "-c", checker, str(requirements)],
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def node_dependencies_satisfied(npm: str) -> bool:
+    result = subprocess.run(
+        [npm, "ls", "--depth=0", "--silent"],
+        cwd=ROOT / "web",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
 def ensure_python() -> None:
     requirements = ROOT / "requirements.txt"
     wanted = digest(requirements)
     stamp = STATE_DIR / "python.sha256"
     installed = stamp.read_text().strip() if stamp.exists() else ""
 
+    created = False
     if not VENV_PYTHON.exists():
         print("[setup] Creating Python environment once...")
         run([sys.executable, "-m", "venv", str(ROOT / ".venv")])
         installed = ""
+        created = True
 
     if installed != wanted:
-        print("[setup] Python dependencies changed; installing only this time...")
-        run([str(VENV_PYTHON), "-m", "pip", "install", "-r", str(requirements)])
+        if not created and not installed and python_dependencies_satisfied(requirements):
+            print("[fast] Existing Python environment already satisfies this version.")
+        else:
+            print("[setup] Python dependencies changed; installing only this time...")
+            run([str(VENV_PYTHON), "-m", "pip", "install", "-r", str(requirements)])
         STATE_DIR.mkdir(exist_ok=True)
         stamp.write_text(wanted)
     else:
@@ -81,9 +126,12 @@ def ensure_node() -> None:
     next_module = ROOT / "web" / "node_modules" / "next"
 
     if installed != wanted or not next_module.exists():
-        print("[setup] Frontend dependencies changed; installing only this time...")
-        command = [npm, "ci", "--no-audit", "--no-fund"] if lock.exists() else [npm, "install", "--no-audit", "--no-fund"]
-        run(command, cwd=ROOT / "web")
+        if not installed and next_module.exists() and node_dependencies_satisfied(npm):
+            print("[fast] Existing frontend dependencies already satisfy this version.")
+        else:
+            print("[setup] Frontend dependencies changed; installing only this time...")
+            command = [npm, "ci", "--no-audit", "--no-fund"] if lock.exists() else [npm, "install", "--no-audit", "--no-fund"]
+            run(command, cwd=ROOT / "web")
         # npm install may create package-lock.json; stamp the final state.
         STATE_DIR.mkdir(exist_ok=True)
         stamp.write_text(node_dependency_digest(package, lock))
