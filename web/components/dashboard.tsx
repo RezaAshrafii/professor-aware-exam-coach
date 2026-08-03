@@ -31,6 +31,7 @@ export function Dashboard() {
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [backendReady, setBackendReady] = useState<boolean | null>(null);
+  const [activeProvider, setActiveProvider] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<CourseInput>(emptyCourse);
   const [saving, setSaving] = useState(false);
@@ -46,7 +47,12 @@ export function Dashboard() {
       return;
     }
     try {
-      setCourses(await api.listCourses());
+      const [courseItems, modelRuntime] = await Promise.all([
+        api.listCourses(),
+        api.listModelConnections(),
+      ]);
+      setCourses(courseItems);
+      setActiveProvider(modelRuntime.active_provider);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "بارگذاری درس‌ها ناموفق بود.");
     } finally {
@@ -92,7 +98,11 @@ export function Dashboard() {
           </div>
         </div>
         <div className="topbar-actions">
-          <span className="version-label">v0.6</span>
+          <Link className={activeProvider ? "model-runtime-pill active" : "model-runtime-pill"} href="/settings">
+            <span />
+            <div><small>مدل</small><strong>{activeProvider || "تنظیم نشده"}</strong></div>
+          </Link>
+          <Link className="button secondary compact" href="/settings"><Icons.Settings /> تنظیمات</Link><span className="version-label">v0.7</span>
           <div className={`connection ${backendReady ? "online" : backendReady === false ? "offline" : "checking"}`}>
             <span className="connection-dot" />
             {backendReady ? "هسته متصل است" : backendReady === false ? "هسته در دسترس نیست" : "در حال بررسی"}

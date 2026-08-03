@@ -83,6 +83,7 @@ export type Workspace = {
   runs: Run[];
   mistakes: Mistake[];
   model_enabled: boolean;
+  active_provider?: string | null;
 };
 
 export type CourseInput = {
@@ -125,4 +126,35 @@ export type CoachResponse = {
   validation_error?: string | null;
   validation_status?: "valid" | "recovered" | "invalid_fallback" | "not_applicable";
   repair_attempted?: boolean;
+};
+
+export type ModelCatalogItem = {
+  id: string;
+  name: string;
+  description: string;
+  context_length: number | null;
+  output_limit: number | null;
+  thinking: boolean | null;
+  free: boolean | null;
+};
+
+export type ModelConnection = {
+  slot: 1 | 2;
+  label: string;
+  protocol: "gemini" | "openai_compatible";
+  base_url: string;
+  selected_model: string;
+  active: boolean;
+  has_api_key: boolean;
+  cached_models: ModelCatalogItem[];
+  cache_updated_at: string | null;
+};
+
+export type ModelConnectionInput = {
+  label: string;
+  protocol: "gemini" | "openai_compatible";
+  base_url: string;
+  api_key?: string | null;
+  selected_model: string;
+  active: boolean;
 };

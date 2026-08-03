@@ -7,6 +7,9 @@ import type {
   ExampleCardInput,
   Mistake,
   MistakeInput,
+  ModelCatalogItem,
+  ModelConnection,
+  ModelConnectionInput,
   Source,
   Workspace,
 } from "@/lib/types";
@@ -139,5 +142,34 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ mode, prompt }),
     });
+  },
+
+  async listModelConnections(): Promise<{ items: ModelConnection[]; active_provider: string | null }> {
+    return request<{ items: ModelConnection[]; active_provider: string | null }>("/api/model-connections");
+  },
+
+  async saveModelConnection(slot: number, input: ModelConnectionInput): Promise<ModelConnection> {
+    const payload = await request<{ connection: ModelConnection }>(`/api/model-connections/${slot}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    });
+    return payload.connection;
+  },
+
+  async discoverModels(slot: number): Promise<ModelCatalogItem[]> {
+    const payload = await request<{ items: ModelCatalogItem[] }>(`/api/model-connections/${slot}/discover`, {
+      method: "POST",
+    });
+    return payload.items;
+  },
+
+  async testModelConnection(slot: number): Promise<{ ok: boolean; response: string; provider: string }> {
+    return request<{ ok: boolean; response: string; provider: string }>(`/api/model-connections/${slot}/test`, {
+      method: "POST",
+    });
+  },
+
+  async deleteModelConnection(slot: number): Promise<void> {
+    return request<void>(`/api/model-connections/${slot}`, { method: "DELETE" });
   },
 };
