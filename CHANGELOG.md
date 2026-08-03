@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.7.2 — 2026-08-03
+
+- Replaced the grading template textarea with separate question, answer and score fields.
+- Rebuilt grading output as responsive rubric cards and removed the misleading LLM confidence percentage from the UI.
+- Added readable mixed RTL/LTR rendering and dedicated formula blocks without a new frontend dependency.
+- Limited visible evidence to three relevant snippets.
+- Enforced Persian grading criteria and rationales through schema validation and one repair retry.
+- Professor score ranges are now requested only when explicit graded evidence exists.
+- Added one-click mistake-log persistence from grading output and included prior student mistakes in later prompts as learner memory.
+- Replaced the fragile inline-PowerShell updater with `UPDATE_ACOS.bat` + `ACOS_Update.ps1`.
+- Dependency installation is skipped unless dependency declarations actually change.
+
 ## v0.7.1 — 2026-08-03
 
 - Added `update_from_zip.bat` for one-click Windows updates from the newest release ZIP.

@@ -116,10 +116,10 @@ def test_grading_report_rejects_inconsistent_totals():
                 "total_score": 15,
                 "score_breakdown": [
                     {
-                        "criterion": "Method",
+                        "criterion": "روش حل",
                         "max_score": 20,
                         "awarded_score": 14,
-                        "rationale": "One point does not match the declared total.",
+                        "rationale": "یک نمره با مجموع اعلام‌شده سازگار نیست.",
                     }
                 ],
                 "missing_steps": [],
@@ -276,3 +276,48 @@ def test_invalid_fallback_is_persisted_with_explicit_warning():
     assert "STRUCTURED OUTPUT INVALID" in persisted
     assert "bad citation" in persisted
     assert persisted.endswith("raw invalid output")
+
+
+def test_grading_report_rejects_english_only_rubric_text():
+    with pytest.raises(ValidationError, match="must be written in Persian"):
+        GradingReport.model_validate(
+            {
+                "max_score": 10,
+                "total_score": 10,
+                "score_breakdown": [
+                    {
+                        "criterion": "Method",
+                        "max_score": 10,
+                        "awarded_score": 10,
+                        "rationale": "The answer is correct.",
+                    }
+                ],
+                "missing_steps": [],
+                "scientific_errors": [],
+                "calculation_errors": [],
+                "notation_errors": [],
+                "strengths": [],
+                "corrected_answer": "",
+                "confidence": 0.8,
+            }
+        )
+
+
+def test_prompt_includes_student_mistake_memory_without_calling_it_professor_evidence():
+    _, input_text = build_prompt(
+        {"name": "معادلات دیفرانسیل", "professor": "استاد الف", "daily_minutes": 90},
+        "grade",
+        "پاسخ را تصحیح کن",
+        evidence_pack(),
+        mistakes=[
+            {
+                "topic": "معادلات خطی",
+                "category": "تشخیص روش",
+                "description": "معادله خطی را جداشدنی تشخیص دادم.",
+                "prevention": "قبل از حل، فرم استاندارد را بررسی کن.",
+            }
+        ],
+    )
+    assert "حافظه خطاهای قبلی دانشجو" in input_text
+    assert "این بخش شاهد درباره استاد نیست" in input_text
+    assert "معادله خطی را جداشدنی تشخیص دادم" in input_text

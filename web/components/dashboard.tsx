@@ -102,7 +102,7 @@ export function Dashboard() {
             <span />
             <div><small>مدل</small><strong>{activeProvider || "تنظیم نشده"}</strong></div>
           </Link>
-          <Link className="button secondary compact" href="/settings"><Icons.Settings /> تنظیمات</Link><span className="version-label">v0.7.1</span>
+          <Link className="button secondary compact" href="/settings"><Icons.Settings /> تنظیمات</Link><span className="version-label">v0.7.2</span>
           <div className={`connection ${backendReady ? "online" : backendReady === false ? "offline" : "checking"}`}>
             <span className="connection-dot" />
             {backendReady ? "هسته متصل است" : backendReady === false ? "هسته در دسترس نیست" : "در حال بررسی"}

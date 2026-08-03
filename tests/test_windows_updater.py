@@ -1,13 +1,17 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-UPDATER = ROOT / "update_from_zip.bat"
+BAT = ROOT / "UPDATE_ACOS.bat"
+SCRIPT = ROOT / "ACOS_Update.ps1"
+COMPATIBILITY_WRAPPER = ROOT / "update_from_zip.bat"
 
 
 def test_one_click_updater_exists_and_preserves_runtime_data() -> None:
-    content = UPDATER.read_text(encoding="utf-8")
-    assert "Expand-Archive" in content
-    assert "start_product_windows.bat" in content
+    bat = BAT.read_text(encoding="utf-8")
+    script = SCRIPT.read_text(encoding="utf-8")
+    assert "ACOS_Update.ps1" in bat
+    assert "Expand-Archive" in script
+    assert "start_product_windows.bat" in bat
     for protected in (
         ".git",
         ".venv",
@@ -18,18 +22,31 @@ def test_one_click_updater_exists_and_preserves_runtime_data() -> None:
         ".env",
         ".env.local",
     ):
-        assert protected in content
+        assert protected in script
 
 
 def test_updater_rejects_dirty_tracked_worktree() -> None:
-    content = UPDATER.read_text(encoding="utf-8")
+    content = SCRIPT.read_text(encoding="utf-8")
     assert "git status --porcelain --untracked-files=no" in content
-    assert "Tracked project files have local changes" in content
+    assert "Commit or restore tracked changes before updating" in content
 
 
 def test_updater_accepts_explicit_zip_or_auto_discovers_one() -> None:
-    content = UPDATER.read_text(encoding="utf-8")
-    assert 'set "ACOS_ZIP=%~1"' in content
+    content = SCRIPT.read_text(encoding="utf-8")
+    assert '[string]$ZipPath = ""' in content
     assert "Downloads" in content
     assert "Desktop" in content
     assert "professor_aware_exam_coach" in content
+
+
+def test_updater_does_not_reinstall_unchanged_dependencies() -> None:
+    content = SCRIPT.read_text(encoding="utf-8")
+    assert "Python dependencies unchanged; skipped." in content
+    assert "Frontend dependencies unchanged; skipped." in content
+    assert "Get-FrontendDependencyHash" in content
+    assert "dependencies = $package.dependencies" in content
+
+
+def test_old_updater_name_remains_as_a_compatibility_wrapper() -> None:
+    content = COMPATIBILITY_WRAPPER.read_text(encoding="utf-8")
+    assert "UPDATE_ACOS.bat" in content

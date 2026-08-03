@@ -3,7 +3,12 @@ from __future__ import annotations
 from datetime import date
 from typing import Literal, TypeAlias
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+def _contains_persian(value: str) -> bool:
+    return any("\u0600" <= character <= "\u06FF" for character in value)
+
 
 
 class CourseCreate(BaseModel):
@@ -116,6 +121,13 @@ class ScoreBreakdownItem(BaseModel):
     awarded_score: float = Field(ge=0)
     rationale: str = Field(min_length=1, max_length=2000)
 
+    @field_validator("criterion", "rationale")
+    @classmethod
+    def narrative_must_be_persian(cls, value: str) -> str:
+        if not _contains_persian(value):
+            raise ValueError("Grading criteria and rationales must be written in Persian.")
+        return value
+
     @model_validator(mode="after")
     def awarded_does_not_exceed_max(self) -> ScoreBreakdownItem:
         if self.awarded_score > self.max_score:
@@ -128,6 +140,13 @@ class MissingStep(BaseModel):
     impact: str = Field(min_length=1, max_length=1200)
     suggested_fix: str = Field(min_length=1, max_length=2000)
     severity: Literal["low", "medium", "high"]
+
+    @field_validator("step", "impact", "suggested_fix")
+    @classmethod
+    def explanation_must_be_persian(cls, value: str) -> str:
+        if not _contains_persian(value):
+            raise ValueError("Missing-step explanations must be written in Persian.")
+        return value
 
 
 class ScoreRange(BaseModel):

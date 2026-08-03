@@ -1,4 +1,4 @@
-# Professor-Aware Exam Coach — v0.7.0
+# Professor-Aware Exam Coach — v0.7.2
 
 ابزار local-first برای تمرین و تصحیح پاسخ‌های دانشگاهی بر اساس منابع همان درس.
 
@@ -10,13 +10,7 @@
 start_product_windows.bat
 ```
 
-اگر محیط قبلی `.venv` و `web/node_modules` سالم باشند، نسخه جدید همان‌ها را شناسایی و بدون نصب دوباره استفاده می‌کند. در نصب کاملاً تازه، وابستگی‌ها فقط یک‌بار نصب می‌شوند. اجراهای بعدی فقط hash وابستگی‌ها را چک می‌کنند و هیچ ارتقای خودکار pip انجام نمی‌شود.
-
-برای اجرای کاملاً سریع بعد از نصب اولیه:
-
-```text
-start_fast_windows.bat
-```
+اگر `.venv` و `web/node_modules` از قبل سالم باشند، دوباره نصب نمی‌شوند. `start_fast_windows.bat` نیز برای اجرای مستقیم بعد از setup اولیه وجود دارد.
 
 رابط اصلی:
 
@@ -24,34 +18,35 @@ start_fast_windows.bat
 http://localhost:3000
 ```
 
-## مدل و API
+## به‌روزرسانی نسخه‌های بعدی
 
-از داشبورد روی «مدل و API» بزن یا برو به:
+فقط یک پوشه دائمی پروژه نگه دار. ZIP نسخه جدید را در Downloads بگذار، برنامه را ببند و داخل پوشه پروژه روی این فایل دوبار کلیک کن:
 
 ```text
-http://localhost:3000/settings
+UPDATE_ACOS.bat
 ```
 
-دو slot عمومی داری. هر slot می‌تواند یکی از این دو قرارداد را استفاده کند:
+آپدیتر Git، داده درس‌ها، PDFها، API Keyها، `.venv`، `node_modules` و فایل‌های شخصی untracked را نگه می‌دارد. وابستگی‌ها فقط وقتی واقعاً تغییر کنند نصب می‌شوند. نام قدیمی `update_from_zip.bat` نیز به‌عنوان wrapper سازگار باقی مانده است.
 
-- Gemini API
-- OpenAI-compatible API
+## مدل و API
 
-Base URL و API key را وارد می‌کنی، برنامه فهرست مدل‌ها را مستقیم از همان API می‌گیرد، سپس با جست‌وجوی کوتاه مدل را انتخاب می‌کنی. هیچ مدل مشخصی در UI هاردکد نشده است.
+از داشبورد وارد «مدل و API» شو. دو slot عمومی برای Gemini API یا هر سرویس OpenAI-compatible وجود دارد. فهرست مدل‌ها از خود API دریافت می‌شود و مدل خاصی در رابط هاردکد نشده است.
 
-کلیدها فقط داخل `data/model_secrets.json` روی سیستم محلی ذخیره می‌شوند، در پاسخ API نمایش داده نمی‌شوند و توسط `.gitignore` وارد Git نمی‌شوند.
+کلیدها فقط در `data/model_secrets.json` روی سیستم محلی ذخیره می‌شوند و وارد Git نمی‌شوند.
 
-## تغییرات اصلی v0.7.0
+## تغییرات اصلی v0.7.2
 
-- اتصال واقعی Gemini API؛
-- اتصال عمومی OpenAI-compatible برای OpenAI، OpenRouter و سرویس‌های سازگار؛
-- discovery پویای مدل‌ها از endpoint خود سرویس؛
-- دو API slot با یک UI مشترک و searchable model picker؛
-- انتخاب یک مدل فعال برای تمام درس‌ها؛
-- تست اتصال و نمایش provider/model واقعی در خروجی؛
-- حذف وابستگی مستقیم به پکیج OpenAI؛
-- startup هوشمند بدون نصب تکراری وابستگی‌ها؛
-- `start_fast_windows.bat` برای اجرای فوری بعد از setup اولیه.
+- ورودی جداگانه و ساده برای صورت سؤال، پاسخ دانشجو و بارم؛
+- حذف نیاز به نوشتن قالب دستی داخل یک textarea؛
+- ریزنمره کارت‌محور و خواناتر به‌جای جدول عریض؛
+- حذف نمایش درصد اطمینان ساختگی از گزارش تصحیح؛
+- نمایش حداکثر سه شاهد همراه با snippet؛
+- نمایش بهتر متن‌های ترکیبی RTL/LTR و بلوک‌های فرمول؛
+- اجبار معیارها و دلایل تصحیح به زبان فارسی با validation و retry؛
+- تخمین نمره استاد فقط در صورت وجود شاهد واقعی از تصحیح استاد؛
+- ثبت یک‌کلیکی خطای پیشنهادی در دفترچه خطا؛
+- ارسال خطاهای قبلی دانشجو به مدل به‌عنوان حافظه یادگیری، نه شاهد درباره استاد؛
+- آپدیتر دو فایلی پایدار بدون PowerShell توکار و بدون نصب تکراری وابستگی‌ها.
 
 ## تست‌ها
 
@@ -60,16 +55,4 @@ python -m pytest
 node scripts/check_frontend_syntax.mjs
 ```
 
-CI علاوه بر این‌ها type-check و production build فرانت را اجرا می‌کند.
-
 راهنمای تست دستی: [USER_VERIFICATION.md](USER_VERIFICATION.md)
-
-## One-click updates on Windows
-
-After the first installation, keep one permanent project folder. For every later version:
-
-1. download the new ZIP and leave it in Downloads;
-2. close the running API and Web windows;
-3. double-click `update_from_zip.bat` in the project folder.
-
-The updater preserves Git history, course data, API keys, `.venv`, and `web/node_modules`, then starts the application. See `docs/UPDATE_FROM_ZIP.md`.

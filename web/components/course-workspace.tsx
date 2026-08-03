@@ -53,6 +53,9 @@ export function CourseWorkspace({ courseId }: { courseId: number }) {
   const [mistake, setMistake] = useState<MistakeInput>(emptyMistake);
   const [coachMode, setCoachMode] = useState("grade");
   const [coachPrompt, setCoachPrompt] = useState("");
+  const [gradeQuestion, setGradeQuestion] = useState("");
+  const [gradeAnswer, setGradeAnswer] = useState("");
+  const [gradeMaxScore, setGradeMaxScore] = useState("10");
   const [coachResponse, setCoachResponse] = useState<CoachResponse | null>(null);
   const [courseForm, setCourseForm] = useState<CourseInput | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -105,10 +108,37 @@ export function CourseWorkspace({ courseId }: { courseId: number }) {
   }
 
   async function runCoach(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(""); setCoachResponse(null);
-    try { const response = await api.runCoach(courseId, coachMode, coachPrompt); setCoachResponse(response); await load(true); }
+    event.preventDefault();
+    const prompt = coachMode === "grade"
+      ? `صورت سؤال:
+${gradeQuestion.trim()}
+
+پاسخ من:
+${gradeAnswer.trim()}
+
+بارم کل: ${gradeMaxScore}`
+      : coachPrompt.trim();
+    if (!prompt || (coachMode === "grade" && (!gradeQuestion.trim() || !gradeAnswer.trim()))) return;
+    setBusy(true); setError(""); setCoachResponse(null);
+    try { const response = await api.runCoach(courseId, coachMode, prompt); setCoachResponse(response); await load(true); }
     catch (reason) { setError(reason instanceof Error ? reason.message : "اجرای مربی ناموفق بود."); }
     finally { setBusy(false); }
+  }
+
+  async function saveSuggestedMistake(input: MistakeInput) {
+    try {
+      await api.createMistake(courseId, input);
+      await load(true);
+      flash("خطا در دفترچه ثبت شد.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "ثبت خطا ناموفق بود.");
+    }
+  }
+
+  function autoGrow(event: FormEvent<HTMLTextAreaElement>) {
+    const element = event.currentTarget;
+    element.style.height = "auto";
+    element.style.height = `${Math.min(element.scrollHeight, 520)}px`;
   }
 
   async function updateCourse(event: FormEvent<HTMLFormElement>) {
@@ -162,8 +192,27 @@ export function CourseWorkspace({ courseId }: { courseId: number }) {
           </div>}
 
           {tab === "coach" && <div className="workspace-grid coach-grid">
-            <section className="panel coach-form-panel"><div className="panel-heading"><div><span className="eyebrow">AI Workspace</span><h3>مربی پاسخ</h3><p>برای تصحیح، صورت سؤال، پاسخ خودت و بارم را کامل وارد کن.</p></div></div><form className="form-stack" onSubmit={runCoach}><label className="field"><span>حالت</span><select value={coachMode} onChange={(e) => setCoachMode(e.target.value)}><option value="grade">تصحیح سخت‌گیرانه</option><option value="profile">پروفایل استاد</option><option value="analyze">تحلیل منابع</option><option value="teach">آموزش مبحث</option><option value="guided">تمرین هدایت‌شده</option><option value="exam_answer">نسخه برگه امتحان</option><option value="oral">دفاع شفاهی</option><option value="plan">برنامه مطالعه</option></select></label><label className="field"><span>درخواست *</span><textarea required rows={14} value={coachPrompt} onChange={(e) => setCoachPrompt(e.target.value)} placeholder={coachMode === "grade" ? "صورت سؤال:\n...\n\nپاسخ من:\n...\n\nبارم: ۱۰" : "درخواستت را دقیق بنویس…"} /></label><button className="button primary full large" disabled={busy}>{busy ? "در حال بررسی…" : "اجرای تحلیل"}</button></form><div className="micro-note">فقط مثال‌های تأییدشده و chunkهای بازیابی‌شده به مدل داده می‌شوند.</div></section>
-            <section className="panel result-panel"><div className="panel-heading"><div><span className="eyebrow">خروجی</span><h3>نتیجه تحلیل</h3></div>{coachResponse && <span className={`validation-badge ${coachResponse.validation_status ?? "not_applicable"}`}>{coachResponse.validation_status === "valid" ? "معتبر" : coachResponse.validation_status === "recovered" ? "اصلاح‌شده" : coachResponse.validation_status === "invalid_fallback" ? "نامعتبر" : coachResponse.provider}</span>}</div>{coachResponse ? <><StructuredOutput response={coachResponse} />{coachResponse.validation_error && <div className="alert warning"><Icons.Alert />{coachResponse.validation_error}</div>}{coachResponse.evidence.length > 0 && <div className="evidence-list"><h4>شواهد استفاده‌شده</h4>{coachResponse.evidence.map((item, index) => <article key={index}><span>{index + 1}</span><div><strong>{item.filename}</strong><small>{item.chunk_index === null ? "کارت مثال استاد" : `قطعه ${item.chunk_index}`}</small></div></article>)}</div>}</> : <div className="empty-state result-empty"><Icons.Sparkles /><h4>هنوز تحلیلی اجرا نشده</h4><p>حالت مناسب را انتخاب کن و سؤال یا پاسخ خودت را وارد کن.</p></div>}</section>
+            <section className="panel coach-form-panel">
+              <div className="panel-heading"><div><span className="eyebrow">تصحیح سریع</span><h3>{coachMode === "grade" ? "سؤال و پاسخت را وارد کن" : "ابزارهای مربی"}</h3><p>{coachMode === "grade" ? "دیگر لازم نیست قالب خاصی بنویسی؛ برنامه ورودی را خودش برای مدل آماده می‌کند." : "درخواستت را کوتاه و روشن بنویس."}</p></div></div>
+              <form className="form-stack" onSubmit={runCoach}>
+                {coachMode === "grade" ? <>
+                  <label className="field"><span>صورت سؤال *</span><textarea required rows={4} value={gradeQuestion} onInput={autoGrow} onChange={(e) => setGradeQuestion(e.target.value)} placeholder="صورت سؤال را اینجا بنویس یا Paste کن…" /></label>
+                  <label className="field"><span>پاسخ من *</span><textarea required rows={8} value={gradeAnswer} onInput={autoGrow} onChange={(e) => setGradeAnswer(e.target.value)} placeholder="راه‌حل خودت را مرحله‌به‌مرحله وارد کن…" /></label>
+                  <label className="field compact-field"><span>بارم کل</span><input type="number" min="0.25" max="100" step="0.25" value={gradeMaxScore} onChange={(e) => setGradeMaxScore(e.target.value)} /></label>
+                </> : <label className="field"><span>درخواست *</span><textarea required rows={10} value={coachPrompt} onInput={autoGrow} onChange={(e) => setCoachPrompt(e.target.value)} placeholder="درخواستت را دقیق بنویس…" /></label>}
+                <button className="button primary full large" disabled={busy}>{busy ? "در حال تصحیح…" : coachMode === "grade" ? "تصحیح پاسخ" : "اجرای مربی"}</button>
+              </form>
+              <details className="advanced-options"><summary>ابزارهای دیگر</summary><label className="field"><span>حالت مربی</span><select value={coachMode} onChange={(e) => { setCoachMode(e.target.value); setCoachResponse(null); }}><option value="grade">تصحیح سخت‌گیرانه</option><option value="profile">پروفایل استاد</option><option value="analyze">تحلیل منابع</option><option value="teach">آموزش مبحث</option><option value="guided">تمرین هدایت‌شده</option><option value="exam_answer">نسخه برگه امتحان</option><option value="oral">دفاع شفاهی</option><option value="plan">برنامه مطالعه</option></select></label></details>
+              <div className="micro-note">فقط منابع همین درس و مثال‌های تأییدشده به مدل داده می‌شوند.</div>
+            </section>
+            <section className="panel result-panel">
+              <div className="panel-heading"><div><span className="eyebrow">نتیجه</span><h3>گزارش تصحیح</h3></div>{coachResponse && <span className={`validation-badge ${coachResponse.validation_status ?? "not_applicable"}`}>{coachResponse.validation_status === "valid" ? "ساختار معتبر" : coachResponse.validation_status === "recovered" ? "خروجی اصلاح شد" : coachResponse.validation_status === "invalid_fallback" ? "خروجی نامعتبر" : coachResponse.provider}</span>}</div>
+              {coachResponse ? <>
+                <StructuredOutput response={coachResponse} onSaveMistake={saveSuggestedMistake} />
+                {coachResponse.validation_error && <div className="alert warning"><Icons.Alert />{coachResponse.validation_error}</div>}
+                {coachResponse.evidence.length > 0 && <details className="evidence-details"><summary>شواهد استفاده‌شده ({Math.min(coachResponse.evidence.length, 3)})</summary><div className="evidence-list">{coachResponse.evidence.slice(0, 3).map((item, index) => <article key={index}><span>{index + 1}</span><div><strong>{item.filename}</strong><small>{item.chunk_index === null ? "کارت مثال استاد" : `قطعه ${item.chunk_index}`}</small>{item.content && <p dir="auto">{item.content.slice(0, 240)}{item.content.length > 240 ? "…" : ""}</p>}</div></article>)}</div></details>}
+              </> : <div className="empty-state result-empty"><Icons.Sparkles /><h4>آماده تصحیح است</h4><p>صورت سؤال و پاسخ خودت را وارد کن؛ نتیجه کوتاه و ریزنمره در همین‌جا نمایش داده می‌شود.</p></div>}
+            </section>
           </div>}
 
           {tab === "history" && <section className="panel"><div className="panel-heading"><div><span className="eyebrow">Run Log</span><h3>تاریخچه اجراها</h3></div><span className="count-badge">{workspace.runs.length}</span></div>{workspace.runs.length ? <div className="history-list">{workspace.runs.map((run) => <details key={run.id}><summary><div><span className="subtle-pill">{run.mode}</span><strong>{run.user_input.slice(0, 100)}{run.user_input.length > 100 ? "…" : ""}</strong></div><small>{run.created_at} · {run.provider}</small></summary><pre>{run.output}</pre></details>)}</div> : <div className="empty-state"><Icons.History /><h4>تاریخچه خالی است</h4><p>هر بار که مربی را اجرا کنی، خروجی اینجا ذخیره می‌شود.</p></div>}</section>}

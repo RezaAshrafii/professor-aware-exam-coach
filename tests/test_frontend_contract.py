@@ -39,3 +39,20 @@ def test_smart_launcher_does_not_upgrade_pip_on_every_start():
     assert "node.sha256" in bootstrap
     assert "Existing Python environment already satisfies" in bootstrap
     assert "Existing frontend dependencies already satisfy" in bootstrap
+
+
+def test_coach_uses_separate_question_answer_and_score_fields():
+    source = (ROOT / "web/components/course-workspace.tsx").read_text(encoding="utf-8")
+    assert "gradeQuestion" in source
+    assert "gradeAnswer" in source
+    assert "gradeMaxScore" in source
+    assert "دیگر لازم نیست قالب خاصی بنویسی" in source
+    assert "slice(0, 3)" in source
+
+
+def test_grading_output_uses_cards_and_hides_raw_confidence_metric():
+    source = (ROOT / "web/components/structured-output.tsx").read_text(encoding="utf-8")
+    assert "rubric-cards" in source
+    assert "اطمینان گزارش" not in source
+    assert "ثبت در دفترچه خطا" in source
+    assert "math-line" in source

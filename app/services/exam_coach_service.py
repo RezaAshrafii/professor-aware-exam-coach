@@ -30,7 +30,14 @@ class ExamCoachService:
         chunks = repositories.list_retrieval_items(int(course["id"]))
         query = f"{mode} {course.get('exam_scope', '')} {user_input}"
         evidence = retrieve(query, chunks, limit=settings.max_context_chunks)
-        instructions, input_text = build_prompt(course, mode, user_input, evidence)
+        mistakes = repositories.list_mistakes(int(course["id"]))
+        instructions, input_text = build_prompt(
+            course,
+            mode,
+            user_input,
+            evidence,
+            mistakes=mistakes,
+        )
         response_model = structured_model_for_mode(mode)
         result = self.llm.generate(
             instructions,

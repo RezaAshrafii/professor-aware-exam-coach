@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     database_path: str = "data/exam_coach.db"
     upload_dir: str = "data/uploads"
     model_secrets_path: str = "data/model_secrets.json"
-    max_context_chunks: int = 8
+    max_context_chunks: int = 5
     max_upload_mb: int = 20
     web_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
