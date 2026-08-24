@@ -11,7 +11,7 @@ def test_one_click_updater_exists_and_preserves_runtime_data() -> None:
     script = SCRIPT.read_text(encoding="utf-8")
     assert "ACOS_Update.ps1" in bat
     assert "Expand-Archive" in script
-    assert "start_product_windows.bat" in bat
+    assert "start_product_windows.bat" in COMPATIBILITY_WRAPPER.read_text(encoding="utf-8")
     for protected in (
         ".git",
         ".venv",
@@ -43,10 +43,11 @@ def test_updater_does_not_reinstall_unchanged_dependencies() -> None:
     content = SCRIPT.read_text(encoding="utf-8")
     assert "Python dependencies unchanged; skipped." in content
     assert "Frontend dependencies unchanged; skipped." in content
-    assert "Get-FrontendDependencyHash" in content
-    assert "dependencies = $package.dependencies" in content
+    assert "Get-HashOrEmpty" in content
+    assert "$oldPackageLockHash" in content
 
 
 def test_old_updater_name_remains_as_a_compatibility_wrapper() -> None:
     content = COMPATIBILITY_WRAPPER.read_text(encoding="utf-8")
-    assert "UPDATE_ACOS.bat" in content
+    assert "ACOS_Update.ps1" not in content
+    assert "start_product_windows.bat" in content
